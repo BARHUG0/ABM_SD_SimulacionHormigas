@@ -14,8 +14,10 @@ class ParameterSpec(ApiModel):
     default: float
     minimum: float
     maximum: float
+    step: float = Field(description="Incremento sugerido para controles deslizantes")
     unit: str
     live_editable: bool = Field(description="Si es falso, solo se puede cambiar antes de iniciar o tras un reset")
+    constraints: list[str] = Field(description="Reglas que relacionan este parámetro con otros")
 
 
 class ParameterUpdate(ApiModel):

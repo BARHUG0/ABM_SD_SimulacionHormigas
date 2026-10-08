@@ -21,6 +21,7 @@ class Subscription(ApiModel):
 
 class NoticeKind(StrEnum):
     EVENT_SCHEDULED = "event_scheduled"
+    EVENT_UPDATED = "event_updated"
     EVENT_STARTED = "event_started"
     EVENT_ENDED = "event_ended"
     EVENT_CANCELLED = "event_cancelled"
@@ -34,7 +35,7 @@ class NoticeKind(StrEnum):
 class Notice(ApiModel):
     kind: NoticeKind
     message: str
-    event_id: str | None = None
+    event: EventInfo | None = None
     command_id: str | None = None
 
 
@@ -52,57 +53,61 @@ class StatusPayload(ApiModel):
     finish_reason: FinishReason | None
 
 
-class InitMessage(ApiModel):
-    type: Literal["init"]
+class Envelope(ApiModel):
+    seq: int = Field(description="Consecutivo por conexión. Un salto indica mensajes perdidos: pedir GET /state")
     tick: int
     sim_time: float
+
+
+class InitMessage(Envelope):
+    type: Literal["init"]
     payload: InitPayload
 
 
-class FrameMessage(ApiModel):
+class FrameMessage(Envelope):
     type: Literal["frame"]
-    tick: int
-    sim_time: float
     payload: FrameData
 
 
-class FieldMessage(ApiModel):
+class FieldMessage(Envelope):
     type: Literal["field"]
-    tick: int
-    sim_time: float
     payload: FieldData
 
 
-class NoticeMessage(ApiModel):
+class NoticeMessage(Envelope):
     type: Literal["event"]
-    tick: int
-    sim_time: float
     payload: Notice
 
 
-class StatusMessage(ApiModel):
+class StatusMessage(Envelope):
     type: Literal["status"]
-    tick: int
-    sim_time: float
     payload: StatusPayload
 
 
-class ErrorMessage(ApiModel):
+class ConfigMessage(Envelope):
+    type: Literal["config"]
+    payload: SimulationConfig
+
+
+class ErrorMessage(Envelope):
     type: Literal["error"]
-    tick: int
-    sim_time: float
     payload: ErrorBody
 
 
-class PongMessage(ApiModel):
+class PongMessage(Envelope):
     type: Literal["pong"]
-    tick: int
-    sim_time: float
 
 
 class ServerMessage(RootModel):
     root: Annotated[
-        InitMessage | FrameMessage | FieldMessage | NoticeMessage | StatusMessage | ErrorMessage | PongMessage,
+        InitMessage
+        | FrameMessage
+        | FieldMessage
+        | NoticeMessage
+        | StatusMessage
+        | ConfigMessage
+        | ErrorMessage
+        | PongMessage,
         Field(discriminator="type"),
     ]
 

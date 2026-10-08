@@ -67,6 +67,58 @@ def test_notices_for_world_edits(client, simulation_id):
         assert notice["payload"]["command_id"] == ack["command_id"]
 
 
+def test_messages_carry_consecutive_seq(client, simulation_id):
+    with stream(client, simulation_id) as websocket:
+        seqs = [websocket.receive_json()["seq"] for _ in range(6)]
+        assert seqs == [1, 2, 3, 4, 5, 6]
+
+
+def test_world_edits_stream_frame_and_layer_while_paused(client, simulation_id):
+    with stream(client, simulation_id) as websocket:
+        receive_until(websocket, "frame")
+        for _ in range(3):
+            receive_until(websocket, "field")
+        client.post(f"{API}/simulations/{simulation_id}/world/food", json={"x": 5, "y": 5})
+        assert websocket.receive_json()["type"] == "frame"
+        field = websocket.receive_json()
+        assert field["type"] == "field" and field["payload"]["layer"] == "food"
+        client.post(f"{API}/simulations/{simulation_id}/predators", json={"x": 5, "y": 5, "count": 1})
+        frame = receive_until(websocket, "frame")
+        assert len(frame["payload"]["predators"]["ids"]) == 3
+
+
+def test_parameter_update_streams_config(client, simulation_id):
+    with stream(client, simulation_id) as websocket:
+        receive_until(websocket, "frame")
+        values = {"values": {"ants.speed": 2.0}}
+        client.patch(f"{API}/simulations/{simulation_id}/parameters", json=values)
+        config = receive_until(websocket, "config")
+        assert config["payload"]["ants"]["speed"] == 2.0
+
+
+def test_event_notices_include_event(client, simulation_id):
+    with stream(client, simulation_id) as websocket:
+        receive_until(websocket, "frame")
+        client.post(f"{API}/simulations/{simulation_id}/events", json={"type": "drought"})
+        notice = receive_until(websocket, "event")
+        assert notice["payload"]["kind"] == "event_scheduled"
+        assert notice["payload"]["event"]["type"] == "drought"
+
+
+def test_full_queue_drops_frames_but_keeps_control_messages():
+    from hormiguero.engine.simulation import Subscriber
+
+    subscriber = Subscriber()
+    subscriber.queue = __import__("asyncio").Queue(maxsize=2)
+    subscriber.send({"type": "frame"})
+    subscriber.send({"type": "frame"})
+    subscriber.send({"type": "frame"})
+    subscriber.send({"type": "status"})
+    kept = [subscriber.queue.get_nowait() for _ in range(2)]
+    assert [message["seq"] for message in kept] == [2, 4]
+    assert kept[1]["type"] == "status"
+
+
 def test_unknown_simulation_closes_socket(client):
     with stream(client, "sim_missing") as websocket:
         assert websocket.receive_json()["payload"]["code"] == "simulation_not_found"

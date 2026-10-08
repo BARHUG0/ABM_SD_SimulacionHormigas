@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from hormiguero.engine.fields import disk_mask, encode_field, stroke_mask
+from hormiguero.engine.fields import disk_mask, stroke_mask
 from hormiguero.schemas.common import Region
 from hormiguero.schemas.config import SimulationConfig
 from hormiguero.schemas.events import EventInfo, PerturbationType
@@ -12,7 +12,6 @@ from hormiguero.schemas.state import (
     AntsFrame,
     AntState,
     DeathsByCause,
-    FieldData,
     FieldLayer,
     FrameData,
     FrameMetrics,
@@ -20,6 +19,7 @@ from hormiguero.schemas.state import (
     NestFrame,
     NestStocks,
     PredatorsFrame,
+    PredatorSource,
     PredatorState,
 )
 
@@ -40,10 +40,11 @@ class Predator:
     heading: float
     state: PredatorState
     energy: float
+    source: PredatorSource
 
 
 class MockModel:
-    def __init__(self, config: SimulationConfig, seed: int):
+    def __init__(self, config: SimulationConfig, seed: int, obstacles: np.ndarray | None = None):
         self.config = config
         self.rng = np.random.default_rng(seed)
         self.tick = 0
@@ -51,6 +52,8 @@ class MockModel:
         self.shape = (world.height, world.width)
         self.layers = {layer: np.zeros(self.shape, dtype=np.float32) for layer in FieldLayer}
         self.layers[FieldLayer.MOISTURE].fill(1.0)
+        if obstacles is not None and obstacles.shape == self.shape:
+            self.layers[FieldLayer.OBSTACLES][:] = obstacles
         self._place_food_sources()
 
         count = config.ants.initial_workers
@@ -61,12 +64,13 @@ class MockModel:
         self.ant_role = self.rng.integers(0, len(ROLES), count)
         self.ant_state = self.rng.integers(0, len(ANT_STATES), count)
         self.ant_energy = np.full(count, config.ants.energy_max)
+        self.ant_age = self.rng.integers(0, config.ants.lifespan // 2, count)
 
         self.predators: dict[int, Predator] = {}
         self.next_predator_id = 0
         self.wave_predators: dict[str, list[int]] = {}
         for _ in range(config.predators.initial_count):
-            self._spawn_predator(*self._random_cell())
+            self._spawn_predator(*self._random_cell(), PredatorSource.INITIAL)
 
         nest = config.nest
         self.stocks = NestStocks(
@@ -84,32 +88,34 @@ class MockModel:
         self._update_nest()
 
     def frame(self, active_event_ids: list[str]) -> FrameData:
-        states = [ANT_STATES[s] for s in self.ant_state]
-        in_nest = sum(1 for s in states if s is AntState.IDLE_IN_NEST)
-        active = len(states) - in_nest
+        alive = int(self.ant_state.size)
+        in_nest = int(np.count_nonzero(self.ant_state == ANT_STATES.index(AntState.IDLE_IN_NEST)))
+        active = alive - in_nest
         predators = list(self.predators.items())
         return FrameData(
             ants=AntsFrame(
                 ids=self.ant_ids.tolist(),
-                x=np.round(self.ant_x, 2).tolist(),
-                y=np.round(self.ant_y, 2).tolist(),
-                heading=np.round(self.ant_heading % (2 * math.pi), 3).tolist(),
-                role=[ROLES[r] for r in self.ant_role],
-                state=states,
+                x=np.round(self.ant_x, 1).tolist(),
+                y=np.round(self.ant_y, 1).tolist(),
+                heading=np.round(self.ant_heading % (2 * math.pi), 2).tolist(),
+                role=self.ant_role.tolist(),
+                state=self.ant_state.tolist(),
                 carrying=(self.ant_state == ANT_STATES.index(AntState.RETURNING)).tolist(),
-                energy=self.ant_energy.tolist(),
+                energy=np.round(self.ant_energy, 1).tolist(),
+                age=self.ant_age.tolist(),
             ),
             predators=PredatorsFrame(
                 ids=[pid for pid, _ in predators],
-                x=[round(p.x, 2) for _, p in predators],
-                y=[round(p.y, 2) for _, p in predators],
-                heading=[round(p.heading % (2 * math.pi), 3) for _, p in predators],
+                x=[round(p.x, 1) for _, p in predators],
+                y=[round(p.y, 1) for _, p in predators],
+                heading=[round(p.heading % (2 * math.pi), 2) for _, p in predators],
                 state=[p.state for _, p in predators],
-                energy=[p.energy for _, p in predators],
+                energy=[round(p.energy, 1) for _, p in predators],
+                source=[p.source for _, p in predators],
             ),
             nest=NestFrame(stocks=self.stocks, flows=self.flows, forager_fraction=self._forager_fraction()),
             metrics=FrameMetrics(
-                alive_ants=len(states),
+                alive_ants=alive,
                 foragers_active=active,
                 ants_in_nest=in_nest,
                 predators=len(predators),
@@ -120,9 +126,6 @@ class MockModel:
             ),
             active_event_ids=active_event_ids,
         )
-
-    def field(self, layer: FieldLayer, downsample: int = 1) -> FieldData:
-        return encode_field(layer, self.layers[layer], downsample)
 
     def paint_obstacles(self, cells: list[tuple[int, int]], radius: int, add: bool) -> int:
         world = self.config.world
@@ -137,17 +140,25 @@ class MockModel:
                 self.layers[layer][mask] = 0.0
         return changed
 
-    def add_food(self, x: int, y: int, radius: int, amount: float) -> None:
+    def add_food(self, x: int, y: int, radius: int, amount: float) -> int:
         mask = disk_mask(self.shape, x, y, radius) & (self.layers[FieldLayer.OBSTACLES] == 0)
-        cells = np.count_nonzero(mask)
+        cells = int(np.count_nonzero(mask))
         if cells:
             self.layers[FieldLayer.FOOD][mask] += amount / cells
+        return cells
+
+    def erase_food(self, x: int, y: int, radius: int) -> int:
+        food = self.layers[FieldLayer.FOOD]
+        mask = disk_mask(self.shape, x, y, radius) & (food > 0)
+        food[mask] = 0.0
+        return int(np.count_nonzero(mask))
 
     def add_predators(self, x: int, y: int, count: int) -> list[int]:
         return [
             self._spawn_predator(
                 float(np.clip(x + self.rng.normal(0, 1.5), 0, self.shape[1] - 1)),
                 float(np.clip(y + self.rng.normal(0, 1.5), 0, self.shape[0] - 1)),
+                PredatorSource.USER,
             )
             for _ in range(count)
         ]
@@ -163,7 +174,8 @@ class MockModel:
             self.layers[FieldLayer.MOISTURE][rows, cols] = 1.0 - event.intensity
         elif event.type is PerturbationType.PREDATOR_WAVE:
             self.wave_predators[event.id] = [
-                self._spawn_predator(*self._random_cell(event.region)) for _ in range(event.predator_count or 0)
+                self._spawn_predator(*self._random_cell(event.region), PredatorSource.WAVE)
+                for _ in range(event.predator_count or 0)
             ]
 
     def end_event(self, event: EventInfo) -> None:
@@ -194,7 +206,7 @@ class MockModel:
             return slice(0, self.shape[0]), slice(0, self.shape[1])
         return slice(region.y, region.y + region.height), slice(region.x, region.x + region.width)
 
-    def _spawn_predator(self, x: float, y: float) -> int:
+    def _spawn_predator(self, x: float, y: float, source: PredatorSource) -> int:
         predator_id = self.next_predator_id
         self.next_predator_id += 1
         self.predators[predator_id] = Predator(
@@ -203,6 +215,7 @@ class MockModel:
             heading=float(self.rng.uniform(0, 2 * math.pi)),
             state=PredatorState.WANDERING,
             energy=100.0,
+            source=source,
         )
         return predator_id
 
@@ -218,6 +231,7 @@ class MockModel:
         self.ant_y = np.where(blocked, self.ant_y, next_y)
         self.ant_heading[blocked] += math.pi
         self.ant_energy = np.maximum(self.ant_energy - ants.energy_decay, 0.0)
+        self.ant_age += 1
         if self.ant_state.size and self.tick % 50 == 0:
             self.ant_state = self.rng.integers(0, len(ANT_STATES), self.ant_state.size)
 

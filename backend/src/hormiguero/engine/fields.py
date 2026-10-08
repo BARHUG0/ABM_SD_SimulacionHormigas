@@ -13,10 +13,11 @@ def downsample_grid(values: np.ndarray, factor: int) -> np.ndarray:
     return trimmed.reshape(height, factor, width, factor).mean(axis=(1, 3))
 
 
-def encode_field(layer: FieldLayer, values: np.ndarray, downsample: int = 1) -> FieldData:
+def encode_field(layer: FieldLayer, values: np.ndarray, downsample: int = 1, scale: float | None = None) -> FieldData:
     grid = downsample_grid(values, downsample)
-    scale = float(grid.max()) if grid.size else 0.0
-    normalized = grid / scale if scale > 0 else np.zeros_like(grid)
+    if scale is None:
+        scale = float(grid.max()) if grid.size else 0.0
+    normalized = np.clip(grid / scale, 0, 1) if scale > 0 else np.zeros_like(grid)
     data = np.round(normalized * 255).astype(np.uint8).tobytes()
     return FieldData(
         layer=layer,

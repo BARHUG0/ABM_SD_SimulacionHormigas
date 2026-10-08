@@ -27,6 +27,7 @@ class ControlAction(StrEnum):
     PAUSE = "pause"
     STEP = "step"
     RESET = "reset"
+    SET_SPEED = "set_speed"
 
 
 class ScenarioInfo(ApiModel):
@@ -53,7 +54,17 @@ class SimulationCreate(ApiModel):
 class ControlRequest(ApiModel):
     action: ControlAction
     steps: int = Field(1, ge=1, le=1000, description="Solo aplica a step")
-    speed: float | None = Field(None, ge=1, le=120, description="Ticks por segundo")
+    speed: float | None = Field(None, ge=1, le=120, description="Ticks por segundo. Obligatorio para set_speed")
+    seed: int | None = Field(None, ge=0, le=2**32 - 1, description="Solo aplica a reset. Nueva semilla")
+    keep_obstacles: bool = Field(False, description="Solo aplica a reset. Conserva los obstáculos dibujados")
+
+    @model_validator(mode="after")
+    def options_match_action(self) -> Self:
+        if self.action is ControlAction.SET_SPEED and self.speed is None:
+            raise ValueError("set_speed requiere speed")
+        if self.action is not ControlAction.RESET and (self.seed is not None or self.keep_obstacles):
+            raise ValueError("seed y keep_obstacles solo aplican a reset")
+        return self
 
 
 class SimulationInfo(ApiModel):

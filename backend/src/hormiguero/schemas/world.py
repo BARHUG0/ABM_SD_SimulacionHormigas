@@ -20,7 +20,8 @@ class FoodPlacement(ApiModel):
     x: int = Field(ge=0)
     y: int = Field(ge=0)
     radius: int = Field(3, ge=1, le=20)
-    amount: float = Field(100.0, gt=0, le=10_000)
+    amount: float = Field(100.0, gt=0, le=10_000, description="Se ignora en modo erase")
+    mode: BrushMode = BrushMode.ADD
 
 
 class PredatorPlacement(ApiModel):
@@ -31,4 +32,6 @@ class PredatorPlacement(ApiModel):
 
 class PredatorsCreated(ApiModel):
     ids: list[int]
+    x: list[float]
+    y: list[float]
     applied_at_tick: int

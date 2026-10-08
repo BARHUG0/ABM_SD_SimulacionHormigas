@@ -1,5 +1,7 @@
 from enum import StrEnum
 
+from pydantic import Field
+
 from hormiguero.schemas.common import ApiModel
 from hormiguero.schemas.state import DeathsByCause
 
@@ -23,6 +25,10 @@ class HistoryKey(StrEnum):
     METRICS_FOOD_IN_WORLD = "metrics.food_in_world"
     METRICS_FOOD_DELIVERED_TOTAL = "metrics.food_delivered_total"
     METRICS_FORAGING_EFFICIENCY = "metrics.foraging_efficiency"
+    DEATHS_PREDATOR = "deaths.predator"
+    DEATHS_FLOOD = "deaths.flood"
+    DEATHS_STARVATION = "deaths.starvation"
+    DEATHS_OLD_AGE = "deaths.old_age"
 
 
 class ExportFormat(StrEnum):
@@ -32,6 +38,7 @@ class ExportFormat(StrEnum):
 
 class HistoryResponse(ApiModel):
     keys: list[HistoryKey]
+    resolution: int = Field(description="Ticks entre muestras guardadas. Se duplica cuando el historial se llena")
     ticks: list[int]
     series: dict[str, list[float]]
 

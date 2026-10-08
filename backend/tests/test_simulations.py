@@ -66,6 +66,46 @@ def test_reset_returns_to_tick_zero(client, simulation_id):
     assert info["status"] == "created"
 
 
+def test_set_speed_while_running(client, simulation_id):
+    control(client, simulation_id, action="start", speed=10)
+    info = control(client, simulation_id, action="set_speed", speed=90).json()
+    assert info["speed"] == 90
+    assert info["status"] == "running"
+    control(client, simulation_id, action="pause")
+
+
+def test_rejected_transition_keeps_speed(client, simulation_id):
+    assert control(client, simulation_id, action="pause", speed=99).status_code == 409
+    assert client.get(f"{API}/simulations/{simulation_id}").json()["speed"] == 30
+
+
+def test_control_option_validation(client, simulation_id):
+    assert control(client, simulation_id, action="set_speed").status_code == 422
+    assert control(client, simulation_id, action="start", seed=3).status_code == 422
+
+
+def test_reset_with_new_seed_and_kept_obstacles(client, simulation_id):
+    client.post(f"{API}/simulations/{simulation_id}/world/obstacles", json={"cells": [[10, 10]], "radius": 2})
+    info = control(client, simulation_id, action="reset", seed=99, keep_obstacles=True).json()
+    assert info["seed"] == 99
+    field = client.get(f"{API}/simulations/{simulation_id}/fields/obstacles").json()
+    assert any(base64.b64decode(field["data"]))
+    control(client, simulation_id, action="reset")
+    field = client.get(f"{API}/simulations/{simulation_id}/fields/obstacles").json()
+    assert not any(base64.b64decode(field["data"]))
+
+
+def test_finished_simulation_can_be_extended(client, simulation_id):
+    path = f"{API}/simulations/{simulation_id}/parameters"
+    client.patch(path, json={"values": {"run.max_ticks": 100}})
+    control(client, simulation_id, action="step", steps=100)
+    assert control(client, simulation_id, action="step").json()["error"]["code"] == "simulation_finished"
+    client.patch(path, json={"values": {"run.max_ticks": 120}})
+    info = control(client, simulation_id, action="step", steps=50).json()
+    assert info["tick"] == 120
+    assert info["status"] == "finished"
+
+
 def test_simulation_finishes_at_max_ticks(client, simulation_id):
     client.patch(f"{API}/simulations/{simulation_id}/parameters", json={"values": {"run.max_ticks": 100}})
     info = control(client, simulation_id, action="step", steps=150).json()
@@ -100,7 +140,7 @@ def test_non_live_parameter_rebuilds_world_before_start(client, simulation_id):
 def test_state_snapshot(client, simulation_id):
     state = client.get(f"{API}/simulations/{simulation_id}/state").json()
     ants = state["frame"]["ants"]
-    assert len(ants["ids"]) == len(ants["x"]) == len(ants["state"]) == 100
+    assert len(ants["ids"]) == len(ants["x"]) == len(ants["state"]) == len(ants["age"]) == 100
     assert state["world"]["nest"] == {"x": 100, "y": 100, "radius": 5}
     assert state["frame"]["nest"]["stocks"]["workers"] == 100
 
@@ -119,6 +159,28 @@ def test_history_filters(client, simulation_id):
     assert history["ticks"] == [2, 4, 6, 8, 10]
     assert set(history["series"]) == {"stocks.food", "metrics.alive_ants"}
     assert len(history["series"]["stocks.food"]) == 5
+
+
+def test_history_includes_deaths(client, simulation_id):
+    params = {"keys": ["deaths.predator", "deaths.flood", "deaths.starvation", "deaths.old_age"]}
+    history = client.get(f"{API}/simulations/{simulation_id}/history", params=params).json()
+    assert history["resolution"] == 1
+    assert history["series"]["deaths.predator"] == [0.0]
+
+
+def test_history_compacts_instead_of_dropping_start():
+    from hormiguero.engine.history import History
+    from hormiguero.engine.mock_model import MockModel
+    from hormiguero.schemas.config import SimulationConfig
+
+    frame = MockModel(SimulationConfig(), seed=1).frame([])
+    history = History(capacity=10)
+    for tick in range(40):
+        history.append(tick, frame)
+    response = history.query(None)
+    assert response.ticks[0] == 0
+    assert response.resolution == 4
+    assert response.ticks == list(range(0, 40, 4))
 
 
 def test_history_rejects_unknown_key(client, simulation_id):

@@ -19,7 +19,8 @@ async def simulation_stream(websocket: WebSocket, simulation_id: str) -> None:
     simulation = websocket.app.state.manager.simulations.get(simulation_id)
     if simulation is None:
         error = ErrorBody(code="simulation_not_found", message=f"Simulación '{simulation_id}' no encontrada")
-        await websocket.send_json(ErrorMessage(type="error", tick=0, sim_time=0.0, payload=error).model_dump(mode="json"))
+        message = ErrorMessage(type="error", seq=1, tick=0, sim_time=0.0, payload=error)
+        await websocket.send_json(message.model_dump(mode="json"))
         await websocket.close(code=CLOSE_NOT_FOUND)
         return
 

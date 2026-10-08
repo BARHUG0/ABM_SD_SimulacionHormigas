@@ -52,6 +52,27 @@
         }
       }
     },
+    "/api/v1/catalog": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Catalog",
+        "operationId": "catalog_api_v1_catalog_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalog"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/scenarios": {
       "get": {
         "tags": [
@@ -1427,6 +1448,85 @@
           }
         }
       },
+      "patch": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Update Event",
+        "operationId": "update_event_api_v1_simulations__simulation_id__events__event_id__patch",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "tags": [
           "events"
@@ -1617,25 +1717,6 @@
         "type": "object",
         "title": "AntConfig"
       },
-      "AntRole": {
-        "type": "string",
-        "enum": [
-          "forager",
-          "scout",
-          "soldier"
-        ],
-        "title": "AntRole"
-      },
-      "AntState": {
-        "type": "string",
-        "enum": [
-          "searching",
-          "returning",
-          "fleeing",
-          "idle_in_nest"
-        ],
-        "title": "AntState"
-      },
       "AntsFrame": {
         "properties": {
           "ids": {
@@ -1669,17 +1750,19 @@
           },
           "role": {
             "items": {
-              "$ref": "#/components/schemas/AntRole"
+              "type": "integer"
             },
             "type": "array",
-            "title": "Role"
+            "title": "Role",
+            "description": "Índice en Catalog.ant_roles"
           },
           "state": {
             "items": {
-              "$ref": "#/components/schemas/AntState"
+              "type": "integer"
             },
             "type": "array",
-            "title": "State"
+            "title": "State",
+            "description": "Índice en Catalog.ant_states"
           },
           "carrying": {
             "items": {
@@ -1694,6 +1777,14 @@
             },
             "type": "array",
             "title": "Energy"
+          },
+          "age": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Age",
+            "description": "Ticks de vida"
           }
         },
         "additionalProperties": false,
@@ -1706,7 +1797,8 @@
           "role",
           "state",
           "carrying",
-          "energy"
+          "energy",
+          "age"
         ],
         "title": "AntsFrame"
       },
@@ -1759,6 +1851,95 @@
         ],
         "title": "BrushStroke"
       },
+      "Catalog": {
+        "properties": {
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "type": "array",
+            "title": "Series"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "type": "array",
+            "title": "Layers"
+          },
+          "ant_roles": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "type": "array",
+            "title": "Ant Roles"
+          },
+          "ant_states": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "type": "array",
+            "title": "Ant States"
+          },
+          "predator_states": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "type": "array",
+            "title": "Predator States"
+          },
+          "predator_sources": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "type": "array",
+            "title": "Predator Sources"
+          },
+          "perturbations": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "type": "array",
+            "title": "Perturbations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "series",
+          "layers",
+          "ant_roles",
+          "ant_states",
+          "predator_states",
+          "predator_sources",
+          "perturbations"
+        ],
+        "title": "Catalog"
+      },
+      "CatalogEntry": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "value",
+          "label",
+          "unit"
+        ],
+        "title": "CatalogEntry"
+      },
       "CommandAck": {
         "properties": {
           "command_id": {
@@ -1772,6 +1953,18 @@
           "applied_at_tick": {
             "type": "integer",
             "title": "Applied At Tick"
+          },
+          "affected_cells": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Affected Cells",
+            "description": "Celdas modificadas. Nulo si el comando no actúa sobre celdas"
           }
         },
         "additionalProperties": false,
@@ -1779,7 +1972,8 @@
         "required": [
           "command_id",
           "kind",
-          "applied_at_tick"
+          "applied_at_tick",
+          "affected_cells"
         ],
         "title": "CommandAck"
       },
@@ -1789,7 +1983,8 @@
           "start",
           "pause",
           "step",
-          "reset"
+          "reset",
+          "set_speed"
         ],
         "title": "ControlAction"
       },
@@ -1818,7 +2013,27 @@
               }
             ],
             "title": "Speed",
-            "description": "Ticks por segundo"
+            "description": "Ticks por segundo. Obligatorio para set_speed"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 4294967295.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed",
+            "description": "Solo aplica a reset. Nueva semilla"
+          },
+          "keep_obstacles": {
+            "type": "boolean",
+            "title": "Keep Obstacles",
+            "description": "Solo aplica a reset. Conserva los obstáculos dibujados",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -2032,6 +2247,74 @@
         ],
         "title": "EventStatus"
       },
+      "EventUpdate": {
+        "properties": {
+          "intensity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intensity"
+          },
+          "duration": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Region"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "start_tick": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Tick"
+          },
+          "predator_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 50.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predator Count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "EventUpdate"
+      },
       "ExportFormat": {
         "type": "string",
         "enum": [
@@ -2065,7 +2348,7 @@
           "scale": {
             "type": "number",
             "title": "Scale",
-            "description": "Valor real = byte / 255 * scale"
+            "description": "Valor real = byte / 255 * scale. Es el máximo histórico de la capa, estable entre envíos hasta un reset"
           },
           "data": {
             "type": "string",
@@ -2131,7 +2414,12 @@
             "maximum": 10000.0,
             "exclusiveMinimum": 0.0,
             "title": "Amount",
+            "description": "Se ignora en modo erase",
             "default": 100.0
+          },
+          "mode": {
+            "$ref": "#/components/schemas/BrushMode",
+            "default": "add"
           }
         },
         "additionalProperties": false,
@@ -2264,7 +2552,11 @@
           "metrics.predators",
           "metrics.food_in_world",
           "metrics.food_delivered_total",
-          "metrics.foraging_efficiency"
+          "metrics.foraging_efficiency",
+          "deaths.predator",
+          "deaths.flood",
+          "deaths.starvation",
+          "deaths.old_age"
         ],
         "title": "HistoryKey"
       },
@@ -2276,6 +2568,11 @@
             },
             "type": "array",
             "title": "Keys"
+          },
+          "resolution": {
+            "type": "integer",
+            "title": "Resolution",
+            "description": "Ticks entre muestras guardadas. Se duplica cuando el historial se llena"
           },
           "ticks": {
             "items": {
@@ -2299,6 +2596,7 @@
         "type": "object",
         "required": [
           "keys",
+          "resolution",
           "ticks",
           "series"
         ],
@@ -2594,6 +2892,11 @@
             "type": "number",
             "title": "Maximum"
           },
+          "step": {
+            "type": "number",
+            "title": "Step",
+            "description": "Incremento sugerido para controles deslizantes"
+          },
           "unit": {
             "type": "string",
             "title": "Unit"
@@ -2602,6 +2905,14 @@
             "type": "boolean",
             "title": "Live Editable",
             "description": "Si es falso, solo se puede cambiar antes de iniciar o tras un reset"
+          },
+          "constraints": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Constraints",
+            "description": "Reglas que relacionan este parámetro con otros"
           }
         },
         "additionalProperties": false,
@@ -2615,8 +2926,10 @@
           "default",
           "minimum",
           "maximum",
+          "step",
           "unit",
-          "live_editable"
+          "live_editable",
+          "constraints"
         ],
         "title": "ParameterSpec"
       },
@@ -2810,6 +3123,15 @@
         ],
         "title": "PredatorPlacement"
       },
+      "PredatorSource": {
+        "type": "string",
+        "enum": [
+          "initial",
+          "user",
+          "wave"
+        ],
+        "title": "PredatorSource"
+      },
       "PredatorState": {
         "type": "string",
         "enum": [
@@ -2828,6 +3150,20 @@
             "type": "array",
             "title": "Ids"
           },
+          "x": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "X"
+          },
+          "y": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Y"
+          },
           "applied_at_tick": {
             "type": "integer",
             "title": "Applied At Tick"
@@ -2837,6 +3173,8 @@
         "type": "object",
         "required": [
           "ids",
+          "x",
+          "y",
           "applied_at_tick"
         ],
         "title": "PredatorsCreated"
@@ -2884,6 +3222,13 @@
             },
             "type": "array",
             "title": "Energy"
+          },
+          "source": {
+            "items": {
+              "$ref": "#/components/schemas/PredatorSource"
+            },
+            "type": "array",
+            "title": "Source"
           }
         },
         "additionalProperties": false,
@@ -2894,7 +3239,8 @@
           "y",
           "heading",
           "state",
-          "energy"
+          "energy",
+          "source"
         ],
         "title": "PredatorsFrame"
       },
@@ -3466,13 +3812,13 @@
         ],
         "title": "ClientMessage"
       },
-      "ErrorMessage": {
+      "ConfigMessage": {
         "additionalProperties": false,
         "properties": {
-          "type": {
-            "const": "error",
-            "title": "Type",
-            "type": "string"
+          "seq": {
+            "description": "Consecutivo por conexión. Un salto indica mensajes perdidos: pedir GET /state",
+            "title": "Seq",
+            "type": "integer"
           },
           "tick": {
             "title": "Tick",
@@ -3482,14 +3828,55 @@
             "title": "Sim Time",
             "type": "number"
           },
+          "type": {
+            "const": "config",
+            "title": "Type",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/SimulationConfig"
+          }
+        },
+        "required": [
+          "seq",
+          "tick",
+          "sim_time",
+          "type",
+          "payload"
+        ],
+        "title": "ConfigMessage",
+        "type": "object"
+      },
+      "ErrorMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "seq": {
+            "description": "Consecutivo por conexión. Un salto indica mensajes perdidos: pedir GET /state",
+            "title": "Seq",
+            "type": "integer"
+          },
+          "tick": {
+            "title": "Tick",
+            "type": "integer"
+          },
+          "sim_time": {
+            "title": "Sim Time",
+            "type": "number"
+          },
+          "type": {
+            "const": "error",
+            "title": "Type",
+            "type": "string"
+          },
           "payload": {
             "$ref": "#/components/schemas/ErrorBody"
           }
         },
         "required": [
-          "type",
+          "seq",
           "tick",
           "sim_time",
+          "type",
           "payload"
         ],
         "title": "ErrorMessage",
@@ -3498,10 +3885,10 @@
       "FieldMessage": {
         "additionalProperties": false,
         "properties": {
-          "type": {
-            "const": "field",
-            "title": "Type",
-            "type": "string"
+          "seq": {
+            "description": "Consecutivo por conexión. Un salto indica mensajes perdidos: pedir GET /state",
+            "title": "Seq",
+            "type": "integer"
           },
           "tick": {
             "title": "Tick",
@@ -3511,14 +3898,20 @@
             "title": "Sim Time",
             "type": "number"
           },
+          "type": {
+            "const": "field",
+            "title": "Type",
+            "type": "string"
+          },
           "payload": {
             "$ref": "#/components/schemas/FieldData"
           }
         },
         "required": [
-          "type",
+          "seq",
           "tick",
           "sim_time",
+          "type",
           "payload"
         ],
         "title": "FieldMessage",
@@ -3527,10 +3920,10 @@
       "FrameMessage": {
         "additionalProperties": false,
         "properties": {
-          "type": {
-            "const": "frame",
-            "title": "Type",
-            "type": "string"
+          "seq": {
+            "description": "Consecutivo por conexión. Un salto indica mensajes perdidos: pedir GET /state",
+            "title": "Seq",
+            "type": "integer"
           },
           "tick": {
             "title": "Tick",
@@ -3540,14 +3933,20 @@
             "title": "Sim Time",
             "type": "number"
           },
+          "type": {
+            "const": "frame",
+            "title": "Type",
+            "type": "string"
+          },
           "payload": {
             "$ref": "#/components/schemas/FrameData"
           }
         },
         "required": [
-          "type",
+          "seq",
           "tick",
           "sim_time",
+          "type",
           "payload"
         ],
         "title": "FrameMessage",
@@ -3556,10 +3955,10 @@
       "InitMessage": {
         "additionalProperties": false,
         "properties": {
-          "type": {
-            "const": "init",
-            "title": "Type",
-            "type": "string"
+          "seq": {
+            "description": "Consecutivo por conexión. Un salto indica mensajes perdidos: pedir GET /state",
+            "title": "Seq",
+            "type": "integer"
           },
           "tick": {
             "title": "Tick",
@@ -3569,14 +3968,20 @@
             "title": "Sim Time",
             "type": "number"
           },
+          "type": {
+            "const": "init",
+            "title": "Type",
+            "type": "string"
+          },
           "payload": {
             "$ref": "#/components/schemas/InitPayload"
           }
         },
         "required": [
-          "type",
+          "seq",
           "tick",
           "sim_time",
+          "type",
           "payload"
         ],
         "title": "InitMessage",
@@ -3625,17 +4030,16 @@
             "title": "Message",
             "type": "string"
           },
-          "event_id": {
+          "event": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/EventInfo"
               },
               {
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Event Id"
+            "default": null
           },
           "command_id": {
             "anyOf": [
@@ -3660,6 +4064,7 @@
       "NoticeKind": {
         "enum": [
           "event_scheduled",
+          "event_updated",
           "event_started",
           "event_ended",
           "event_cancelled",
@@ -3675,10 +4080,10 @@
       "NoticeMessage": {
         "additionalProperties": false,
         "properties": {
-          "type": {
-            "const": "event",
-            "title": "Type",
-            "type": "string"
+          "seq": {
+            "description": "Consecutivo por conexión. Un salto indica mensajes perdidos: pedir GET /state",
+            "title": "Seq",
+            "type": "integer"
           },
           "tick": {
             "title": "Tick",
@@ -3688,14 +4093,20 @@
             "title": "Sim Time",
             "type": "number"
           },
+          "type": {
+            "const": "event",
+            "title": "Type",
+            "type": "string"
+          },
           "payload": {
             "$ref": "#/components/schemas/Notice"
           }
         },
         "required": [
-          "type",
+          "seq",
           "tick",
           "sim_time",
+          "type",
           "payload"
         ],
         "title": "NoticeMessage",
@@ -3719,10 +4130,10 @@
       "PongMessage": {
         "additionalProperties": false,
         "properties": {
-          "type": {
-            "const": "pong",
-            "title": "Type",
-            "type": "string"
+          "seq": {
+            "description": "Consecutivo por conexión. Un salto indica mensajes perdidos: pedir GET /state",
+            "title": "Seq",
+            "type": "integer"
           },
           "tick": {
             "title": "Tick",
@@ -3731,12 +4142,18 @@
           "sim_time": {
             "title": "Sim Time",
             "type": "number"
+          },
+          "type": {
+            "const": "pong",
+            "title": "Type",
+            "type": "string"
           }
         },
         "required": [
-          "type",
+          "seq",
           "tick",
-          "sim_time"
+          "sim_time",
+          "type"
         ],
         "title": "PongMessage",
         "type": "object"
@@ -3744,6 +4161,7 @@
       "ServerMessage": {
         "discriminator": {
           "mapping": {
+            "config": "#/components/schemas/ConfigMessage",
             "error": "#/components/schemas/ErrorMessage",
             "event": "#/components/schemas/NoticeMessage",
             "field": "#/components/schemas/FieldMessage",
@@ -3771,6 +4189,9 @@
             "$ref": "#/components/schemas/StatusMessage"
           },
           {
+            "$ref": "#/components/schemas/ConfigMessage"
+          },
+          {
             "$ref": "#/components/schemas/ErrorMessage"
           },
           {
@@ -3782,10 +4203,10 @@
       "StatusMessage": {
         "additionalProperties": false,
         "properties": {
-          "type": {
-            "const": "status",
-            "title": "Type",
-            "type": "string"
+          "seq": {
+            "description": "Consecutivo por conexión. Un salto indica mensajes perdidos: pedir GET /state",
+            "title": "Seq",
+            "type": "integer"
           },
           "tick": {
             "title": "Tick",
@@ -3795,14 +4216,20 @@
             "title": "Sim Time",
             "type": "number"
           },
+          "type": {
+            "const": "status",
+            "title": "Type",
+            "type": "string"
+          },
           "payload": {
             "$ref": "#/components/schemas/StatusPayload"
           }
         },
         "required": [
-          "type",
+          "seq",
           "tick",
           "sim_time",
+          "type",
           "payload"
         ],
         "title": "StatusMessage",

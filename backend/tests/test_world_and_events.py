@@ -1,3 +1,5 @@
+import base64
+
 from conftest import API
 
 
@@ -9,14 +11,53 @@ def step(client, simulation_id, steps):
     client.post(url(simulation_id, "/control"), json={"action": "step", "steps": steps})
 
 
+def obstacle_cells(client, simulation_id):
+    field = client.get(url(simulation_id, "/fields/obstacles")).json()
+    return sum(1 for value in base64.b64decode(field["data"]) if value)
+
+
 def test_paint_and_erase_obstacles(client, simulation_id):
-    ack = client.post(url(simulation_id, "/world/obstacles"), json={"cells": [[10, 10], [11, 10]], "radius": 2}).json()
+    stroke = {"cells": [[10, 10], [11, 10]], "radius": 2}
+    ack = client.post(url(simulation_id, "/world/obstacles"), json=stroke).json()
     assert ack["kind"] == "obstacles"
     assert ack["command_id"].startswith("cmd_")
-    scale = client.get(url(simulation_id, "/fields/obstacles")).json()["scale"]
-    assert scale == 1.0
-    client.post(url(simulation_id, "/world/obstacles"), json={"cells": [[10, 10], [11, 10]], "radius": 2, "mode": "erase"})
-    assert client.get(url(simulation_id, "/fields/obstacles")).json()["scale"] == 0.0
+    assert ack["affected_cells"] == obstacle_cells(client, simulation_id) > 0
+    erased = client.post(url(simulation_id, "/world/obstacles"), json=stroke | {"mode": "erase"}).json()
+    assert erased["affected_cells"] == ack["affected_cells"]
+    assert obstacle_cells(client, simulation_id) == 0
+
+
+def test_erase_food(client, simulation_id):
+    client.post(url(simulation_id, "/world/food"), json={"x": 20, "y": 20, "radius": 3, "amount": 50})
+    erased = client.post(url(simulation_id, "/world/food"), json={"x": 20, "y": 20, "radius": 3, "mode": "erase"}).json()
+    assert erased["affected_cells"] > 0
+
+
+def test_food_on_obstacles_reports_zero_cells(client, simulation_id):
+    client.post(url(simulation_id, "/world/obstacles"), json={"cells": [[20, 20]], "radius": 5})
+    ack = client.post(url(simulation_id, "/world/food"), json={"x": 20, "y": 20, "radius": 2}).json()
+    assert ack["affected_cells"] == 0
+
+
+def test_predator_positions_and_source(client, simulation_id):
+    created = client.post(url(simulation_id, "/predators"), json={"x": 30, "y": 30, "count": 2}).json()
+    assert len(created["x"]) == len(created["y"]) == 2
+    predators = client.get(url(simulation_id, "/state")).json()["frame"]["predators"]
+    sources = dict(zip(predators["ids"], predators["source"]))
+    assert {sources[predator_id] for predator_id in created["ids"]} == {"user"}
+    assert set(sources.values()) == {"initial", "user"}
+
+
+def test_update_scheduled_event(client, simulation_id):
+    event = client.post(url(simulation_id, "/events"), json={"type": "flood", "start_tick": 10, "duration": 5}).json()
+    updated = client.patch(url(simulation_id, f"/events/{event['id']}"), json={"start_tick": 20, "intensity": 0.9}).json()
+    assert updated["start_tick"] == 20 and updated["end_tick"] == 25 and updated["intensity"] == 0.9
+    invalid = client.patch(url(simulation_id, f"/events/{event['id']}"), json={"start_tick": 0})
+    assert invalid.json()["error"]["code"] == "start_tick_in_past"
+    step(client, simulation_id, 20)
+    response = client.patch(url(simulation_id, f"/events/{event['id']}"), json={"intensity": 0.1})
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "event_not_editable"
 
 
 def test_obstacles_out_of_bounds(client, simulation_id):

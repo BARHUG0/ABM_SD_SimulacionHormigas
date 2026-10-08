@@ -20,6 +20,7 @@ def _recovery(event: EventInfo, ticks: list[int], population: list[float]) -> Re
 
 
 def survival_summary(
+    current_tick: int,
     history: History,
     events: list[EventInfo],
     collapse_tick: int | None,
@@ -32,7 +33,7 @@ def survival_summary(
     min_index = min(range(len(population)), key=population.__getitem__)
     started = [event for event in events if event.status in (EventStatus.ACTIVE, EventStatus.FINISHED)]
     return SurvivalSummary(
-        ticks_elapsed=ticks[-1],
+        ticks_elapsed=current_tick,
         colony_alive=collapse_tick is None,
         collapse_tick=collapse_tick,
         peak_population=max(population),

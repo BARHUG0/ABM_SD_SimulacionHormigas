@@ -1,3 +1,4 @@
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -11,7 +12,7 @@ from hormiguero.api.openapi import build_openapi
 from hormiguero.engine.manager import SimulationManager
 
 API_PREFIX = "/api/v1"
-CORS_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+CORS_ORIGINS = os.environ.get("HORMIGUERO_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
 
 
 @asynccontextmanager

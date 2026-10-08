@@ -1,9 +1,30 @@
+import math
+
 from annotated_types import Ge, Le
 from pydantic import BaseModel, ValidationError
 
 from hormiguero.errors import conflict, unprocessable
 from hormiguero.schemas.config import SimulationConfig
 from hormiguero.schemas.parameters import ParameterSpec
+
+
+NEST_INSIDE_WORLD = "El nido debe quedar completamente dentro del mundo"
+FORAGER_BOUNDS = "min_forager_fraction no puede superar a max_forager_fraction"
+CONSTRAINTS = {
+    "world.width": [NEST_INSIDE_WORLD],
+    "world.height": [NEST_INSIDE_WORLD],
+    "world.nest_x": [NEST_INSIDE_WORLD],
+    "world.nest_y": [NEST_INSIDE_WORLD],
+    "world.nest_radius": [NEST_INSIDE_WORLD],
+    "nest.min_forager_fraction": [FORAGER_BOUNDS],
+    "nest.max_forager_fraction": [FORAGER_BOUNDS],
+}
+
+
+def _slider_step(is_int: bool, minimum: float, maximum: float) -> float:
+    if is_int:
+        return 1
+    return 10 ** math.floor(math.log10((maximum - minimum) / 100))
 
 
 def _build_specs() -> dict[str, ParameterSpec]:
@@ -14,17 +35,21 @@ def _build_specs() -> dict[str, ParameterSpec]:
             bounds = {type(item): item for item in field.metadata}
             extra = field.json_schema_extra or {}
             key = f"{group}.{name}"
+            is_int = field.annotation is int
+            minimum, maximum = bounds[Ge].ge, bounds[Le].le
             specs[key] = ParameterSpec(
                 key=key,
                 group=group,
                 name=name,
                 description=field.description or "",
-                type="int" if field.annotation is int else "float",
+                type="int" if is_int else "float",
                 default=field.default,
-                minimum=bounds[Ge].ge,
-                maximum=bounds[Le].le,
+                minimum=minimum,
+                maximum=maximum,
+                step=_slider_step(is_int, minimum, maximum),
                 unit=extra.get("unit", ""),
                 live_editable=extra.get("live_editable", False),
+                constraints=CONSTRAINTS.get(key, []),
             )
     return specs
 

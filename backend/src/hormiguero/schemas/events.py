@@ -34,6 +34,14 @@ class EventCreate(ApiModel):
         return self
 
 
+class EventUpdate(ApiModel):
+    intensity: float | None = Field(None, ge=0, le=1)
+    duration: int | None = Field(None, ge=1, le=100_000)
+    region: Region | None = None
+    start_tick: int | None = Field(None, ge=0)
+    predator_count: int | None = Field(None, ge=1, le=50)
+
+
 class EventInfo(ApiModel):
     id: str
     type: PerturbationType

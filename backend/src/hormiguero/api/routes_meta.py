@@ -4,8 +4,10 @@ from fastapi import APIRouter
 from pydantic import TypeAdapter
 
 from hormiguero import API_VERSION
+from hormiguero.engine.catalog import CATALOG
 from hormiguero.engine.parameters import PARAMETER_SPECS
 from hormiguero.engine.scenarios import SCENARIOS
+from hormiguero.schemas.catalog import Catalog
 from hormiguero.schemas.common import ApiModel, HealthResponse
 from hormiguero.schemas.messages import ClientMessage, ServerMessage
 from hormiguero.schemas.parameters import ParameterSpec
@@ -27,6 +29,11 @@ async def health() -> HealthResponse:
 @router.get("/parameters/schema", response_model=list[ParameterSpec])
 async def parameter_schema() -> list[ParameterSpec]:
     return list(PARAMETER_SPECS.values())
+
+
+@router.get("/catalog", response_model=Catalog)
+async def catalog() -> Catalog:
+    return CATALOG
 
 
 @router.get("/scenarios", response_model=list[ScenarioInfo])

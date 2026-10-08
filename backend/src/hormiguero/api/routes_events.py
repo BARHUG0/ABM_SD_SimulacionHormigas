@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from hormiguero.api.dependencies import SimulationDep
 from hormiguero.api.errors import ERROR_RESPONSES
-from hormiguero.schemas.events import EventCreate, EventInfo
+from hormiguero.schemas.events import EventCreate, EventInfo, EventUpdate
 
 router = APIRouter(prefix="/simulations/{simulation_id}/events", tags=["events"], responses=ERROR_RESPONSES)
 
@@ -20,6 +20,11 @@ async def list_events(simulation: SimulationDep) -> list[EventInfo]:
 @router.get("/{event_id}", response_model=EventInfo)
 async def get_event(event_id: str, simulation: SimulationDep) -> EventInfo:
     return simulation.get_event(event_id)
+
+
+@router.patch("/{event_id}", response_model=EventInfo)
+async def update_event(event_id: str, request: EventUpdate, simulation: SimulationDep) -> EventInfo:
+    return simulation.update_event(event_id, request)
 
 
 @router.delete("/{event_id}", response_model=EventInfo)

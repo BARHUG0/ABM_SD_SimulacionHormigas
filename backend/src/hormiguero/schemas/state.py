@@ -25,6 +25,12 @@ class PredatorState(StrEnum):
     EATING = "eating"
 
 
+class PredatorSource(StrEnum):
+    INITIAL = "initial"
+    USER = "user"
+    WAVE = "wave"
+
+
 class FieldLayer(StrEnum):
     PHEROMONE_FOOD = "pheromone_food"
     PHEROMONE_HOME = "pheromone_home"
@@ -40,10 +46,11 @@ class AntsFrame(ApiModel):
     x: list[float]
     y: list[float]
     heading: list[float] = Field(description="Radianes")
-    role: list[AntRole]
-    state: list[AntState]
+    role: list[int] = Field(description="Índice en Catalog.ant_roles")
+    state: list[int] = Field(description="Índice en Catalog.ant_states")
     carrying: list[bool]
     energy: list[float]
+    age: list[int] = Field(description="Ticks de vida")
 
 
 class PredatorsFrame(ApiModel):
@@ -53,6 +60,7 @@ class PredatorsFrame(ApiModel):
     heading: list[float]
     state: list[PredatorState]
     energy: list[float]
+    source: list[PredatorSource]
 
 
 class NestStocks(ApiModel):
@@ -109,7 +117,9 @@ class FieldData(ApiModel):
     height: int
     downsample: int
     encoding: Literal["uint8_base64"]
-    scale: float = Field(description="Valor real = byte / 255 * scale")
+    scale: float = Field(
+        description="Valor real = byte / 255 * scale. Es el máximo histórico de la capa, estable entre envíos hasta un reset"
+    )
     data: str = Field(description="Bytes uint8 en base64, fila por fila, de largo width * height")
 
 

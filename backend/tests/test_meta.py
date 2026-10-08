@@ -12,6 +12,18 @@ def test_parameter_schema_exposes_bounds_and_live_flag(client):
     assert evaporation["live_editable"] is True
     assert specs["world.width"]["live_editable"] is False
     assert specs["ants.initial_workers"]["type"] == "int"
+    assert specs["ants.initial_workers"]["step"] == 1
+    assert evaporation["step"] == 0.01
+    assert specs["world.nest_x"]["constraints"]
+    assert specs["ants.speed"]["constraints"] == []
+
+
+def test_catalog_labels_every_series_and_layer(client):
+    catalog = client.get(f"{API}/catalog").json()
+    series = {entry["value"] for entry in catalog["series"]}
+    assert "deaths.flood" in series and len(series) == 22
+    assert len(catalog["layers"]) == 7
+    assert {entry["value"] for entry in catalog["predator_sources"]} == {"initial", "user", "wave"}
 
 
 def test_scenarios_listed(client):

@@ -33,3 +33,4 @@ class CommandAck(ApiModel):
     command_id: str
     kind: str
     applied_at_tick: int
+    affected_cells: int | None = Field(description="Celdas modificadas. Nulo si el comando no actúa sobre celdas")
