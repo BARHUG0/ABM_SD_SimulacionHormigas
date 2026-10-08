@@ -7,7 +7,7 @@ import type { SeriesTable } from '../../sim/liveHistory'
 import { useSimulation } from '../../sim/store'
 import { AXIS_STYLE } from './theme'
 import { UPlotChart } from './UPlotChart'
-import { CHART_KEYS, DEATH_CAUSES, POPULATION_SERIES, populationData, stackedDeaths } from './series'
+import { CHART_KEYS, DEATH_CAUSES, historyEvery, POPULATION_SERIES, populationData, stackedDeaths } from './series'
 
 type Range = 'recent' | 'full'
 
@@ -89,11 +89,16 @@ function useLiveTable(enabled: boolean): SeriesTable | null {
 function useFullTable(enabled: boolean): SeriesTable | null {
   const simulationId = useSimulation((state) => state.simulationId)
   const running = useSimulation((state) => state.status === 'running')
-  const every = useSimulation((state) => Math.max(1, Math.ceil(state.tick / TARGET_POINTS)))
+  const [resolution, setResolution] = useState(1)
+  const every = useSimulation((state) => historyEvery(state.tick, resolution, TARGET_POINTS))
   const pausedTick = useSimulation((state) => (state.status === 'running' ? null : state.tick))
   const { data } = useQuery({
     queryKey: ['history', simulationId, every, pausedTick],
-    queryFn: () => endpoints.history(simulationId!, CHART_KEYS as HistoryKey[], every),
+    queryFn: async () => {
+      const history = await endpoints.history(simulationId!, CHART_KEYS as HistoryKey[], every)
+      setResolution(history.resolution)
+      return history
+    },
     enabled: enabled && simulationId !== null,
     refetchInterval: running ? FULL_REFRESH_MS : false,
     placeholderData: (previous) => previous,

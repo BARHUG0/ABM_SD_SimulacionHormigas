@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useUi } from '../sim/ui'
 import { AntTooltip } from './AntTooltip'
 import { WorldScene } from './WorldScene'
 
@@ -19,14 +20,18 @@ export function WorldCanvas({ onReady }: WorldCanvasProps) {
     if (!host) return
     let scene: WorldScene | null = null
     let cancelled = false
-    void WorldScene.create(host).then((created) => {
-      if (cancelled) {
-        created.destroy()
-        return
-      }
-      scene = created
-      readyRef.current?.(created)
-    })
+    void WorldScene.create(host)
+      .then((created) => {
+        if (cancelled) {
+          created.destroy()
+          return
+        }
+        scene = created
+        readyRef.current?.(created)
+      })
+      .catch(() => {
+        if (!cancelled) useUi.getState().pushToast('No se pudo iniciar el renderizado del mundo', 'error')
+      })
     return () => {
       cancelled = true
       readyRef.current?.(null)

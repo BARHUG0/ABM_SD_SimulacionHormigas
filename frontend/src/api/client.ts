@@ -6,18 +6,7 @@ export const API_PREFIX = '/api/v1'
 
 export const api = createClient<paths>({ baseUrl: globalThis.location?.origin ?? '' })
 
-export class ApiError extends Error {
-  readonly code: string
-  readonly status: number
-  readonly details: unknown
-
-  constructor(status: number, body: ErrorBody) {
-    super(body.message)
-    this.code = body.code
-    this.status = status
-    this.details = body.details
-  }
-}
+export class ApiError extends Error {}
 
 interface FetchResult<T> {
   data?: T
@@ -25,15 +14,14 @@ interface FetchResult<T> {
   response: Response
 }
 
-function toErrorBody(error: unknown, response: Response): ErrorBody {
+function errorMessage(error: unknown, response: Response): string {
   const body = (error as { error?: ErrorBody } | undefined)?.error
-  if (body?.message) return body
-  return { code: 'http_error', message: `Error ${response.status} del servidor`, details: null }
+  return body?.message || `Error ${response.status} del servidor`
 }
 
 export async function unwrap<T>(request: Promise<FetchResult<T>>): Promise<T> {
   const { data, error, response } = await request
-  if (error !== undefined || !response.ok) throw new ApiError(response.status, toErrorBody(error, response))
+  if (error !== undefined || !response.ok) throw new ApiError(errorMessage(error, response))
   return data as T
 }
 

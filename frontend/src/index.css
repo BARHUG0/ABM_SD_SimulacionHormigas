@@ -10,6 +10,7 @@
   --color-soil-700: #413022;
   --color-soil-600: #5a432f;
   --color-soil-500: #7a5c40;
+  --color-sand-500: #a88b62;
   --color-sand-400: #c9a877;
   --color-sand-300: #e3c899;
   --color-sand-200: #efdcb8;
@@ -19,6 +20,7 @@
   --color-sky-500: #5fa8d3;
   --color-sky-400: #86c1e3;
   --color-amber-500: #e9a23b;
+  --color-amber-400: #f2bb62;
   --color-ember-500: #d9583b;
   --color-ember-400: #e8785e;
 }

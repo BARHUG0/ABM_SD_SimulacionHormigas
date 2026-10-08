@@ -1,10 +1,12 @@
 import { Application, Container, Graphics, Sprite, type Texture } from 'pixi.js'
+import { frameEveryFor } from '../sim/session'
 import { useSimulation, type WorldView } from '../sim/store'
 import { useUi } from '../sim/ui'
 import { AntLayer } from './AntLayer'
 import { Camera, type Point } from './camera'
 import { FieldLayers } from './FieldLayers'
 import { EventLayer } from './EventLayer'
+import { TELEPORT_DISTANCE } from './interpolation'
 import { BACKGROUND, NEST_FILL, NEST_RING } from './palette'
 import { PredatorLayer } from './PredatorLayer'
 import { antTexture, predatorTexture, terrainTexture } from './textures'
@@ -131,8 +133,9 @@ export class WorldScene {
       this.refreshHover()
     }
     const t = Math.min(Math.max((now - simulation.frameReceivedAt) / simulation.frameInterval, 0), 1)
-    this.ants.interpolate(t)
-    this.predators.interpolate(t, now)
+    const maxDistance = TELEPORT_DISTANCE * frameEveryFor(simulation.speed)
+    this.ants.interpolate(t, maxDistance)
+    this.predators.interpolate(t, now, maxDistance)
     this.placeHighlight()
   }
 

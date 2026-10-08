@@ -6,9 +6,6 @@ const backendUrl = process.env.HORMIGUERO_API_URL ?? 'http://localhost:8000'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  build: {
-    chunkSizeWarningLimit: 1200,
-  },
   server: {
     proxy: {
       '/api': { target: backendUrl, ws: true, changeOrigin: true },

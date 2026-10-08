@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { EventInfo, ServerMessage } from '../api/types'
-import { frameMessage, initMessage, makeField, makeFrame } from '../test/fixtures'
+import { frameMessage, initMessage, makeField, makeFrame, makeState } from '../test/fixtures'
 import { useSimulation } from './store'
 
 const store = () => useSimulation.getState()
@@ -94,6 +94,20 @@ describe('simulation store', () => {
     expect(store().needsResync).toBe(false)
     store().applyMessage(frameMessage(5, 4))
     expect(store().needsResync).toBe(true)
+  })
+
+  it('applies a resynced state while keeping streamed fields', () => {
+    store().applyMessage({ type: 'field', seq: 2, tick: 0, sim_time: 0, payload: makeField() })
+    store().applyMessage(frameMessage(9, 3))
+    expect(store().needsResync).toBe(true)
+    store().applyState(makeState(8, makeFrame(120)), 200)
+    expect(store().needsResync).toBe(false)
+    expect(store().tick).toBe(8)
+    expect(store().status).toBe('paused')
+    expect(store().speed).toBe(60)
+    expect(store().frame?.nest.stocks.workers).toBe(120)
+    expect(store().fields.pheromone_food).toBeDefined()
+    expect(store().fields.obstacles).toBeDefined()
   })
 
   it('restarts sequence tracking on reconnect', () => {

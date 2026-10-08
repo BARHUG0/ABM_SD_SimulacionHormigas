@@ -11,6 +11,15 @@ export const DEFAULT_SUBSCRIPTION: Subscription = {
   field_downsample: 2,
 }
 
+const DISPLAY_FRAME_RATE = 30
+
+export function frameEveryFor(speed: number): number {
+  return Math.max(1, Math.ceil(speed / DISPLAY_FRAME_RATE))
+}
+
+const sameLayers = (a: Subscription['layers'], b: Subscription['layers']) =>
+  [...(a ?? [])].sort().join() === [...(b ?? [])].sort().join()
+
 let socket: SimulationSocket | null = null
 let subscription: Subscription = DEFAULT_SUBSCRIPTION
 let stopWatching: (() => void) | null = null
@@ -48,7 +57,7 @@ export function updateSubscription(changes: Partial<Subscription>): void {
     next.frame_every === subscription.frame_every &&
     next.field_every === subscription.field_every &&
     next.field_downsample === subscription.field_downsample &&
-    (next.layers ?? []).join() === (subscription.layers ?? []).join()
+    sameLayers(next.layers, subscription.layers)
   if (unchanged) return
   subscription = next
   socket?.subscribe(subscription)

@@ -76,6 +76,44 @@ describe('SimulationSocket', () => {
     expect(FakeSocket.instances).toHaveLength(3)
   })
 
+  it('sends a new subscription right away when already open', () => {
+    client.connect()
+    FakeSocket.instances[0].open()
+    client.subscribe({ layers: ['pheromone_home'], frame_every: 2, field_every: 5, field_downsample: 2 })
+    expect(FakeSocket.instances[0].sent).toHaveLength(1)
+    expect(FakeSocket.instances[0].sent[0]).toContain('"pheromone_home"')
+  })
+
+  it('does not reconnect after an explicit close', () => {
+    client.connect()
+    FakeSocket.instances[0].open()
+    client.close()
+    expect(FakeSocket.instances[0].readyState).toBe(3)
+    expect(states.at(-1)).toBe('closed')
+    FakeSocket.instances[0].drop()
+    vi.advanceTimersByTime(10000)
+    expect(FakeSocket.instances).toHaveLength(1)
+  })
+
+  it('reconnects when the server stops answering pings', () => {
+    client = new SimulationSocket(
+      'ws://test',
+      { onMessage: vi.fn(), onStateChange: (state) => states.push(state) },
+      { createSocket: () => new FakeSocket() as unknown as WebSocket, initialDelay: 100, pingInterval: 1000 },
+    )
+    client.connect()
+    FakeSocket.instances[0].open()
+    vi.advanceTimersByTime(2000)
+    FakeSocket.instances[0].onmessage?.({ data: '{"type":"pong","seq":1,"tick":0,"sim_time":0,"payload":{}}' })
+    vi.advanceTimersByTime(2000)
+    expect(FakeSocket.instances[0].sent.filter((data) => data.includes('"ping"'))).toHaveLength(4)
+    expect(states.at(-1)).toBe('open')
+    vi.advanceTimersByTime(1000)
+    expect(states.at(-1)).toBe('reconnecting')
+    vi.advanceTimersByTime(100)
+    expect(FakeSocket.instances).toHaveLength(2)
+  })
+
   it('stops when the simulation does not exist', () => {
     client.connect()
     FakeSocket.instances[0].drop(4404)

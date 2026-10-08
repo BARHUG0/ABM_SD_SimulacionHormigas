@@ -3,24 +3,25 @@ import type { FieldLayer } from '../api/types'
 import { releaseSimulation } from './actions'
 import { reachedMilestones } from './milestones'
 import { noticeToast } from './perturbations'
-import { updateSubscription } from './session'
+import { frameEveryFor, updateSubscription } from './session'
 import { useSimulation } from './store'
 import { useUi, type OverlayLayer } from './ui'
 
-const ALWAYS_SUBSCRIBED: FieldLayer[] = ['food']
-
 export function subscribedLayers(visible: Record<OverlayLayer, boolean>): FieldLayer[] {
-  const layers = new Set<FieldLayer>(ALWAYS_SUBSCRIBED)
-  for (const [layer, shown] of Object.entries(visible)) if (shown) layers.add(layer as FieldLayer)
-  return [...layers]
+  return (Object.keys(visible) as OverlayLayer[]).filter((layer) => visible[layer])
 }
 
 export function useSessionSync(): void {
   const visibleLayers = useUi((state) => state.visibleLayers)
+  const speed = useSimulation((state) => state.speed)
 
   useEffect(() => {
     updateSubscription({ layers: subscribedLayers(visibleLayers) })
   }, [visibleLayers])
+
+  useEffect(() => {
+    updateSubscription({ frame_every: frameEveryFor(speed) })
+  }, [speed])
 
   useEffect(
     () =>

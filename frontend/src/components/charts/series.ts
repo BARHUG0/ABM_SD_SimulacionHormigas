@@ -16,6 +16,11 @@ export const POPULATION_SERIES = [
 
 export const CHART_KEYS = [...POPULATION_SERIES.map((item) => item.key), ...DEATH_CAUSES.map((item) => item.key)]
 
+export function historyEvery(tick: number, resolution: number, targetPoints: number): number {
+  const storedSamples = tick / Math.max(resolution, 1)
+  return Math.max(1, Math.ceil(storedSamples / targetPoints))
+}
+
 export function populationData(table: SeriesTable): number[][] {
   return [table.ticks, ...POPULATION_SERIES.map((item) => table.series[item.key] ?? [])]
 }

@@ -3,6 +3,7 @@ import { endpoints } from '../api/endpoints'
 import { attempt, currentSimulationId } from '../sim/actions'
 import { useUi, type Tool } from '../sim/ui'
 import type { Point } from './camera'
+import { cellsBetween, foodRadius } from './strokes'
 import type { PointerHandler, WorldScene } from './WorldScene'
 
 const FLUSH_INTERVAL_MS = 120
@@ -17,20 +18,6 @@ const TOOL_COLORS: Record<Tool, number> = {
   erase: 0xffffff,
 }
 
-export function foodRadius(brushSize: number): number {
-  return Math.min(brushSize + 2, 20)
-}
-
-export function cellsBetween(from: [number, number], to: [number, number]): [number, number][] {
-  const steps = Math.max(Math.abs(to[0] - from[0]), Math.abs(to[1] - from[1]))
-  const cells: [number, number][] = []
-  for (let index = 1; index <= steps; index++) {
-    const t = index / steps
-    cells.push([Math.round(from[0] + (to[0] - from[0]) * t), Math.round(from[1] + (to[1] - from[1]) * t)])
-  }
-  return cells
-}
-
 export function attachWorldTools(scene: WorldScene): () => void {
   const preview = new Graphics()
   const stroke = new Graphics()
@@ -42,6 +29,7 @@ export function attachWorldTools(scene: WorldScene): () => void {
   let strokeMode: 'add' | 'erase' | null = null
   let flushTimer: ReturnType<typeof setInterval> | null = null
   let inFlight = 0
+  let disposed = false
 
   const worldSize = () => scene.worldSize
   const toCell = (point: Point): [number, number] | null => {
@@ -75,12 +63,12 @@ export function attachWorldTools(scene: WorldScene): () => void {
     void attempt(async () => {
       await endpoints.paintObstacles(simulationId, cells, brushSize, mode)
       if (mode === 'erase') {
-        const spots = cells.filter((_, index) => index % brushSize === 0 || index === cells.length - 1)
-        await Promise.all(spots.map(([x, y]) => endpoints.placeFood(simulationId, x, y, brushSize, 'erase')))
+        const [x, y] = cells[cells.length - 1]
+        await endpoints.placeFood(simulationId, x, y, brushSize, 'erase')
       }
     }).finally(() => {
       inFlight--
-      if (!strokeMode && inFlight === 0) stroke.clear()
+      if (!disposed && !strokeMode && inFlight === 0) stroke.clear()
     })
   }
 
@@ -165,6 +153,7 @@ export function attachWorldTools(scene: WorldScene): () => void {
 
   return () => {
     endStroke()
+    disposed = true
     stopToolWatch()
     scene.setPointerHandler(null)
     preview.destroy()

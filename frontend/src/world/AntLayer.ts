@@ -59,7 +59,7 @@ export class AntLayer {
     }
   }
 
-  interpolate(t: number): void {
+  interpolate(t: number, maxDistance: number): void {
     const ants = this.current
     const previous = this.previous
     if (!ants || !previous) return
@@ -69,7 +69,7 @@ export class AntLayer {
       track.y = ants.y[index]
       track.heading = ants.heading[index]
       const from = this.previousIndex.get(ants.ids[index])
-      if (from !== undefined) blendInto(track, previous.x[from], previous.y[from], previous.heading[from], t)
+      if (from !== undefined) blendInto(track, previous.x[from], previous.y[from], previous.heading[from], t, maxDistance)
       const particle = this.particles[index]
       particle.x = track.x
       particle.y = track.y

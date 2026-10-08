@@ -1,5 +1,5 @@
 import { api, unwrap } from './client'
-import type { ControlRequest, EventCreate, HistoryKey } from './types'
+import type { ControlRequest, EventCreate, EventUpdate, HistoryKey } from './types'
 
 type Path = { params: { path: { simulation_id: string } } }
 
@@ -70,6 +70,14 @@ export const endpoints = {
 
   createEvent: (simulationId: string, event: EventCreate) =>
     unwrap(api.POST('/api/v1/simulations/{simulation_id}/events', { ...bySimulation(simulationId), body: event })),
+
+  updateEvent: (simulationId: string, eventId: string, update: EventUpdate) =>
+    unwrap(
+      api.PATCH('/api/v1/simulations/{simulation_id}/events/{event_id}', {
+        params: { path: { simulation_id: simulationId, event_id: eventId } },
+        body: update,
+      }),
+    ),
 
   cancelEvent: (simulationId: string, eventId: string) =>
     unwrap(

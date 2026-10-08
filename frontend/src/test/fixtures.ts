@@ -1,4 +1,11 @@
-import type { FieldData, FrameData, ServerMessage, SimulationConfig, SimulationInfo } from '../api/types'
+import type {
+  FieldData,
+  FrameData,
+  ServerMessage,
+  SimulationConfig,
+  SimulationInfo,
+  SimulationState,
+} from '../api/types'
 
 export function encodeBytes(bytes: number[]): string {
   return btoa(String.fromCharCode(...bytes))
@@ -80,6 +87,16 @@ export function initMessage(seq = 1): ServerMessage {
       subscription: { layers: [], frame_every: 1, field_every: 10, field_downsample: 2 },
       events: [],
     },
+  }
+}
+
+export function makeState(tick: number, frame = makeFrame()): SimulationState {
+  return {
+    info: { ...info, status: 'paused', tick, speed: 60 },
+    config,
+    world: { width: 2, height: 2, nest: { x: 1, y: 1, radius: 1 }, obstacles: makeField({ layer: 'obstacles' }) },
+    frame,
+    events: [],
   }
 }
 

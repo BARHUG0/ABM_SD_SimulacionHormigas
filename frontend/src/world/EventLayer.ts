@@ -1,6 +1,7 @@
 import { Container, Graphics } from 'pixi.js'
 import type { EventInfo, PerturbationType, Region } from '../api/types'
 import type { WorldView } from '../sim/store'
+import { prefersReducedMotion } from './motion'
 import { DROUGHT_COLOR, FLOOD_COLOR, PREDATOR_COLOR } from './palette'
 
 const STYLES: Record<PerturbationType, { color: number; alpha: number; pulse: number; speed: number }> = {
@@ -47,10 +48,11 @@ export class EventLayer {
   }
 
   animate(now: number): void {
+    const pulsing = !prefersReducedMotion()
     for (const [type, graphics] of this.views) {
       if (!graphics.visible) continue
       const style = STYLES[type]
-      graphics.alpha = style.alpha + Math.sin(now * style.speed) * style.pulse
+      graphics.alpha = pulsing ? style.alpha + Math.sin(now * style.speed) * style.pulse : style.alpha
     }
   }
 }

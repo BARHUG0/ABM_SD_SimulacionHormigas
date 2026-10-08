@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { stackedDeaths } from './series'
+import { historyEvery, stackedDeaths } from './series'
+
+describe('historyEvery', () => {
+  it('counts stored samples, not ticks, when the history is thinned', () => {
+    expect(historyEvery(0, 1, 800)).toBe(1)
+    expect(historyEvery(8000, 1, 800)).toBe(10)
+    expect(historyEvery(32000, 2, 800)).toBe(20)
+    expect(historyEvery(32000, 64, 800)).toBe(1)
+  })
+})
 
 describe('stackedDeaths', () => {
   it('stacks causes so the first band holds the total', () => {

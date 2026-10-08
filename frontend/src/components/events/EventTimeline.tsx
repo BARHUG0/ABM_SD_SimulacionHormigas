@@ -7,6 +7,9 @@ import { attempt, currentSimulationId } from '../../sim/actions'
 import {
   DEFAULT_LAUNCH,
   eventRequest,
+  eventUpdate,
+  launchOptionsOf,
+  MIN_EDIT_DELAY,
   PERTURBATION_ORDER,
   PERTURBATIONS,
   timelineDomain,
@@ -32,20 +35,96 @@ const STATUS_LABELS: Record<EventInfo['status'], string> = {
   cancelled: 'Cancelada',
 }
 
-async function launch(type: PerturbationType, options: LaunchOptions) {
+async function upsertFrom(request: (simulationId: string) => Promise<EventInfo>) {
   const simulationId = currentSimulationId()
   if (!simulationId) return
-  const event = await attempt(() =>
-    endpoints.createEvent(simulationId, eventRequest(type, options, useSimulation.getState().world)),
-  )
+  const event = await attempt(() => request(simulationId))
   if (event && currentSimulationId() === simulationId) useSimulation.getState().upsertEvent(event)
 }
 
-async function cancel(eventId: string) {
-  const simulationId = currentSimulationId()
-  if (!simulationId) return
-  const event = await attempt(() => endpoints.cancelEvent(simulationId, eventId))
-  if (event && currentSimulationId() === simulationId) useSimulation.getState().upsertEvent(event)
+function launch(type: PerturbationType, options: LaunchOptions) {
+  const { world, tick } = useSimulation.getState()
+  return upsertFrom((simulationId) => endpoints.createEvent(simulationId, eventRequest(type, options, world, tick)))
+}
+
+function update(event: EventInfo, options: LaunchOptions) {
+  const request = eventUpdate(event.type, options, useSimulation.getState().tick)
+  return upsertFrom((simulationId) => endpoints.updateEvent(simulationId, event.id, request))
+}
+
+function cancel(eventId: string) {
+  return upsertFrom((simulationId) => endpoints.cancelEvent(simulationId, eventId))
+}
+
+interface OptionFieldsProps {
+  type: PerturbationType
+  options: LaunchOptions
+  minDelay: number
+  onChange: (patch: Partial<LaunchOptions>) => void
+}
+
+function OptionFields({ type, options, minDelay, onChange }: OptionFieldsProps) {
+  return (
+    <>
+      <label className="flex flex-col gap-1.5 text-xs font-bold text-sand-300">
+        <span className="flex justify-between">
+          Intensidad <span className="text-amber-400">{Math.round(options.intensity * 100)}%</span>
+        </span>
+        <Slider
+          label="Intensidad"
+          value={options.intensity}
+          min={0.1}
+          max={1}
+          step={0.05}
+          onChange={(intensity) => onChange({ intensity })}
+        />
+      </label>
+      <label className="flex flex-col gap-1.5 text-xs font-bold text-sand-300">
+        <span className="flex justify-between">
+          Duración <span className="text-amber-400">{formatCount(options.duration)} ticks</span>
+        </span>
+        <Slider
+          label="Duración"
+          value={options.duration}
+          min={50}
+          max={3000}
+          step={50}
+          onChange={(duration) => onChange({ duration })}
+        />
+      </label>
+      {type === 'predator_wave' && (
+        <label className="flex flex-col gap-1.5 text-xs font-bold text-sand-300">
+          <span className="flex justify-between">
+            Depredadores <span className="text-amber-400">{options.predatorCount}</span>
+          </span>
+          <Slider
+            label="Depredadores"
+            value={options.predatorCount}
+            min={1}
+            max={20}
+            step={1}
+            onChange={(predatorCount) => onChange({ predatorCount })}
+          />
+        </label>
+      )}
+      <label className="flex flex-col gap-1.5 text-xs font-bold text-sand-300">
+        <span className="flex justify-between">
+          Empieza en{' '}
+          <span className="text-amber-400">
+            {options.delay === 0 ? 'el siguiente tick' : `${formatCount(options.delay)} ticks`}
+          </span>
+        </span>
+        <Slider
+          label="Empieza en"
+          value={options.delay}
+          min={minDelay}
+          max={5000}
+          step={50}
+          onChange={(delay) => onChange({ delay })}
+        />
+      </label>
+    </>
+  )
 }
 
 function LaunchCard({ type, onClose }: { type: PerturbationType; onClose: () => void }) {
@@ -72,47 +151,7 @@ function LaunchCard({ type, onClose }: { type: PerturbationType; onClose: () => 
           <X size={16} />
         </button>
       </div>
-      <label className="flex flex-col gap-1.5 text-xs font-bold text-sand-300">
-        <span className="flex justify-between">
-          Intensidad <span className="text-amber-400">{Math.round(options.intensity * 100)}%</span>
-        </span>
-        <Slider
-          label="Intensidad"
-          value={options.intensity}
-          min={0.1}
-          max={1}
-          step={0.05}
-          onChange={(intensity) => set({ intensity })}
-        />
-      </label>
-      <label className="flex flex-col gap-1.5 text-xs font-bold text-sand-300">
-        <span className="flex justify-between">
-          Duración <span className="text-amber-400">{formatCount(options.duration)} ticks</span>
-        </span>
-        <Slider
-          label="Duración"
-          value={options.duration}
-          min={50}
-          max={3000}
-          step={50}
-          onChange={(duration) => set({ duration })}
-        />
-      </label>
-      {type === 'predator_wave' && (
-        <label className="flex flex-col gap-1.5 text-xs font-bold text-sand-300">
-          <span className="flex justify-between">
-            Depredadores <span className="text-amber-400">{options.predatorCount}</span>
-          </span>
-          <Slider
-            label="Depredadores"
-            value={options.predatorCount}
-            min={1}
-            max={20}
-            step={1}
-            onChange={(predatorCount) => set({ predatorCount })}
-          />
-        </label>
-      )}
+      <OptionFields type={type} options={options} minDelay={0} onChange={set} />
       <button
         onClick={() => {
           void launch(type, options)
@@ -121,9 +160,29 @@ function LaunchCard({ type, onClose }: { type: PerturbationType; onClose: () => 
         className="rounded-xl py-2 text-sm font-extrabold text-soil-950 transition-transform duration-150 hover:scale-[1.02] active:scale-95"
         style={{ background: meta.color }}
       >
-        Lanzar ahora
+        {options.delay === 0 ? 'Lanzar ahora' : 'Programar'}
       </button>
     </motion.div>
+  )
+}
+
+function EventEditor({ event, onClose }: { event: EventInfo; onClose: () => void }) {
+  const [options, setOptions] = useState(() => launchOptionsOf(event, useSimulation.getState().tick))
+  const set = (patch: Partial<LaunchOptions>) => setOptions((current) => ({ ...current, ...patch }))
+
+  return (
+    <div className="flex flex-col gap-3 border-t border-soil-700 pt-3">
+      <OptionFields type={event.type} options={options} minDelay={MIN_EDIT_DELAY} onChange={set} />
+      <button
+        onClick={() => {
+          void update(event, options)
+          onClose()
+        }}
+        className="rounded-xl bg-sand-200 py-1.5 text-xs font-extrabold text-soil-950 hover:bg-sand-100"
+      >
+        Guardar cambios
+      </button>
+    </div>
   )
 }
 
@@ -136,7 +195,7 @@ function EventDetails({ event, onClose }: { event: EventInfo; onClose: () => voi
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
       transition={{ duration: 0.15 }}
-      className="panel absolute right-0 bottom-full mb-2 flex w-64 flex-col gap-2 p-4 text-sm"
+      className="panel absolute right-0 bottom-full mb-2 flex w-72 flex-col gap-2 p-4 text-sm"
     >
       <div className="flex items-center gap-2">
         <span className="font-extrabold" style={{ color: meta.color }}>
@@ -165,6 +224,7 @@ function EventDetails({ event, onClose }: { event: EventInfo; onClose: () => voi
         <dt className="text-sand-400">Zona</dt>
         <dd className="text-sand-100">{event.region ? `${event.region.width}×${event.region.height} celdas` : 'Todo el mundo'}</dd>
       </dl>
+      {event.status === 'scheduled' && <EventEditor event={event} onClose={onClose} />}
       {cancellable && (
         <button
           onClick={() => {
@@ -226,7 +286,7 @@ export function EventTimeline() {
               onClick={() => setPopover(selectedId === event.id ? null : { kind: 'event', id: event.id })}
               aria-label={`${PERTURBATIONS[event.type].label}, ${STATUS_LABELS[event.status]}`}
               className={`absolute h-2 min-w-2 rounded-sm transition-opacity duration-150 hover:opacity-100 ${
-                event.status === 'active' ? 'animate-pulse opacity-100' : event.status === 'finished' ? 'opacity-40' : 'opacity-80'
+                event.status === 'active' ? 'opacity-100 motion-safe:animate-pulse' : event.status === 'finished' ? 'opacity-40' : 'opacity-80'
               } ${selectedId === event.id ? 'ring-2 ring-sand-100' : ''}`}
               style={{
                 top: 4 + PERTURBATION_ORDER.indexOf(event.type) * 10,

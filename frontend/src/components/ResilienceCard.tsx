@@ -1,7 +1,8 @@
+import * as Dialog from '@radix-ui/react-dialog'
 import { useQuery } from '@tanstack/react-query'
 import { HeartPulse, Skull, Sprout, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useRef, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { endpoints } from '../api/endpoints'
 import type { SurvivalSummary } from '../api/types'
 import { PERTURBATIONS } from '../sim/perturbations'
@@ -129,70 +130,60 @@ export function ResilienceCard() {
   const close = () => useUi.getState().setSummaryOpen(false)
   const simulationId = useSimulation((state) => state.simulationId)
   const status = useSimulation((state) => state.status)
+  const generation = useSimulation((state) => state.generation)
   const { data, isError, refetch } = useQuery({
-    queryKey: ['summary', simulationId, status],
+    queryKey: ['summary', simulationId, generation, status],
     queryFn: () => endpoints.summary(simulationId!),
     enabled: open && simulationId !== null,
     staleTime: 0,
   })
-  const closeButton = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    closeButton.current?.focus()
-    return () => previous?.focus()
-  }, [open])
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          key="resilience"
-          className="absolute inset-0 z-40 grid place-items-center bg-soil-950/60 p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onPointerDown={(event) => {
-            if (event.target === event.currentTarget) close()
-          }}
-        >
-          <motion.section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="resilience-title"
-            className="panel flex max-h-full w-[min(520px,100%)] flex-col gap-4 overflow-y-auto p-5"
-            initial={{ scale: 0.94, y: 12 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.96, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-          >
-            <header className="flex items-center gap-2">
-              <HeartPulse className="text-amber-500" size={22} />
-              <h2 id="resilience-title" className="text-xl font-black text-sand-100">
-                Resiliencia de la colonia
-              </h2>
-              <button
-                ref={closeButton}
-                onClick={close}
-                aria-label="Cerrar resumen"
-                className="ml-auto rounded-lg p-1.5 text-sand-300 hover:bg-soil-700"
+    <Dialog.Root open={open} onOpenChange={(next) => !next && close()}>
+      <AnimatePresence>
+        {open && (
+          <Dialog.Portal key="resilience" forceMount>
+            <Dialog.Overlay asChild forceMount>
+              <motion.div
+                className="fixed inset-0 z-40 grid place-items-center bg-soil-950/60 p-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
               >
-                <X size={18} />
-              </button>
-            </header>
-            {data ? (
-              <SummaryBody summary={data} />
-            ) : isError ? (
-              <button onClick={() => void refetch()} className="text-sm font-bold text-amber-400 underline">
-                No se pudo cargar el resumen. Reintentar
-              </button>
-            ) : (
-              <p className="text-sm text-sand-400">Calculando resumen…</p>
-            )}
-          </motion.section>
-        </motion.div>
-      )}
-    </AnimatePresence>
+                <Dialog.Content asChild forceMount aria-describedby={undefined}>
+                  <motion.section
+                    className="panel flex max-h-full w-[min(520px,100%)] flex-col gap-4 overflow-y-auto p-5"
+                    initial={{ scale: 0.94, y: 12 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.96, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+                  >
+                    <header className="flex items-center gap-2">
+                      <HeartPulse className="text-amber-500" size={22} />
+                      <Dialog.Title className="text-xl font-black text-sand-100">Resiliencia de la colonia</Dialog.Title>
+                      <Dialog.Close
+                        aria-label="Cerrar resumen"
+                        className="ml-auto rounded-lg p-1.5 text-sand-300 hover:bg-soil-700"
+                      >
+                        <X size={18} />
+                      </Dialog.Close>
+                    </header>
+                    {data ? (
+                      <SummaryBody summary={data} />
+                    ) : isError ? (
+                      <button onClick={() => void refetch()} className="text-sm font-bold text-amber-400 underline">
+                        No se pudo cargar el resumen. Reintentar
+                      </button>
+                    ) : (
+                      <p className="text-sm text-sand-400">Calculando resumen…</p>
+                    )}
+                  </motion.section>
+                </Dialog.Content>
+              </motion.div>
+            </Dialog.Overlay>
+          </Dialog.Portal>
+        )}
+      </AnimatePresence>
+    </Dialog.Root>
   )
 }

@@ -15,6 +15,7 @@ export interface SocketOptions {
 }
 
 const CLOSE_NOT_FOUND = 4404
+const CLOSE_TIMEOUT = 4000
 
 export class SimulationSocket {
   private socket: WebSocket | null = null
@@ -23,6 +24,7 @@ export class SimulationSocket {
   private retryTimer: ReturnType<typeof setTimeout> | null = null
   private pingTimer: ReturnType<typeof setInterval> | null = null
   private stopped = false
+  private lastMessageAt = 0
   private readonly createSocket: (url: string) => WebSocket
   private readonly pingInterval: number
   private readonly initialDelay: number
@@ -64,23 +66,36 @@ export class SimulationSocket {
     this.socket = socket
     socket.onopen = () => {
       this.retryDelay = this.initialDelay
+      this.lastMessageAt = Date.now()
       this.handlers.onStateChange('open')
       if (this.subscription) this.send({ type: 'subscribe', payload: this.subscription })
-      this.pingTimer = setInterval(() => this.send({ type: 'ping' }), this.pingInterval)
+      this.pingTimer = setInterval(() => {
+        if (Date.now() - this.lastMessageAt <= 2 * this.pingInterval) {
+          this.send({ type: 'ping' })
+          return
+        }
+        socket.close()
+        this.dropped(socket, CLOSE_TIMEOUT)
+      }, this.pingInterval)
     }
-    socket.onmessage = (event) => this.handlers.onMessage(JSON.parse(event.data as string) as ServerMessage)
-    socket.onclose = (event) => {
-      if (this.socket !== socket) return
-      this.clearTimers()
-      this.socket = null
-      if (this.stopped || event.code === CLOSE_NOT_FOUND) {
-        this.handlers.onStateChange('closed')
-        return
-      }
-      this.handlers.onStateChange('reconnecting')
-      this.retryTimer = setTimeout(() => this.open('reconnecting'), this.retryDelay)
-      this.retryDelay = Math.min(this.retryDelay * 2, this.maxDelay)
+    socket.onmessage = (event) => {
+      this.lastMessageAt = Date.now()
+      this.handlers.onMessage(JSON.parse(event.data as string) as ServerMessage)
     }
+    socket.onclose = (event) => this.dropped(socket, event.code)
+  }
+
+  private dropped(socket: WebSocket, code: number): void {
+    if (this.socket !== socket) return
+    this.clearTimers()
+    this.socket = null
+    if (this.stopped || code === CLOSE_NOT_FOUND) {
+      this.handlers.onStateChange('closed')
+      return
+    }
+    this.handlers.onStateChange('reconnecting')
+    this.retryTimer = setTimeout(() => this.open('reconnecting'), this.retryDelay)
+    this.retryDelay = Math.min(this.retryDelay * 2, this.maxDelay)
   }
 
   private send(message: unknown): void {

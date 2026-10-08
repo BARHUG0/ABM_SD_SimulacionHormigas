@@ -1,13 +1,16 @@
 import * as Tabs from '@radix-ui/react-tabs'
 import { ChartLine, Network, SlidersHorizontal, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { useSimulation } from '../sim/store'
 import { useUi, type DrawerTab } from '../sim/ui'
-import { ChartsPanel } from './charts/ChartsPanel'
-import { NestDiagram } from './nest/NestDiagram'
-import { ParametersPanel } from './parameters/ParametersPanel'
 import { IconButton } from './ui/IconButton'
+
+const ChartsPanel = lazy(() => import('./charts/ChartsPanel').then((module) => ({ default: module.ChartsPanel })))
+const NestDiagram = lazy(() => import('./nest/NestDiagram').then((module) => ({ default: module.NestDiagram })))
+const ParametersPanel = lazy(() =>
+  import('./parameters/ParametersPanel').then((module) => ({ default: module.ParametersPanel })),
+)
 
 interface TabSpec {
   id: DrawerTab
@@ -74,7 +77,7 @@ export function Drawer() {
               </div>
               {TABS.map((spec) => (
                 <Tabs.Content key={spec.id} value={spec.id} className="min-h-0 flex-1 overflow-y-auto p-4">
-                  {spec.content()}
+                  <Suspense fallback={<p className="text-sm text-sand-400">Cargando…</p>}>{spec.content()}</Suspense>
                 </Tabs.Content>
               ))}
             </Tabs.Root>

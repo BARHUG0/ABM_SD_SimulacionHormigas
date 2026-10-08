@@ -1,4 +1,4 @@
-import type { EventCreate, EventInfo, Notice, PerturbationType, Region } from '../api/types'
+import type { EventCreate, EventInfo, EventUpdate, Notice, PerturbationType, Region } from '../api/types'
 import type { WorldView } from './store'
 import type { ToastTone } from './ui'
 
@@ -20,9 +20,21 @@ export interface LaunchOptions {
   intensity: number
   duration: number
   predatorCount: number
+  delay: number
 }
 
-export const DEFAULT_LAUNCH: LaunchOptions = { intensity: 0.5, duration: 500, predatorCount: 6 }
+export const DEFAULT_LAUNCH: LaunchOptions = { intensity: 0.5, duration: 500, predatorCount: 6, delay: 0 }
+
+export const MIN_EDIT_DELAY = 50
+
+export function launchOptionsOf(event: EventInfo, tick: number): LaunchOptions {
+  return {
+    intensity: event.intensity,
+    duration: event.duration,
+    predatorCount: event.predator_count ?? DEFAULT_LAUNCH.predatorCount,
+    delay: Math.max(MIN_EDIT_DELAY, Math.round((event.start_tick - tick) / MIN_EDIT_DELAY) * MIN_EDIT_DELAY),
+  }
+}
 
 const FLOOD_FRACTION = 0.3
 
@@ -35,13 +47,28 @@ export function floodRegion(world: WorldView): Region {
   return { x, y, width, height }
 }
 
-export function eventRequest(type: PerturbationType, options: LaunchOptions, world: WorldView | null): EventCreate {
+export function eventRequest(
+  type: PerturbationType,
+  options: LaunchOptions,
+  world: WorldView | null,
+  tick: number,
+): EventCreate {
   return {
     type,
     intensity: options.intensity,
     duration: options.duration,
     region: type === 'flood' && world ? floodRegion(world) : null,
+    start_tick: options.delay > 0 ? tick + options.delay : null,
     predator_count: type === 'predator_wave' ? options.predatorCount : null,
+  }
+}
+
+export function eventUpdate(type: PerturbationType, options: LaunchOptions, tick: number): EventUpdate {
+  return {
+    intensity: options.intensity,
+    duration: options.duration,
+    start_tick: tick + options.delay,
+    ...(type === 'predator_wave' ? { predator_count: options.predatorCount } : {}),
   }
 }
 

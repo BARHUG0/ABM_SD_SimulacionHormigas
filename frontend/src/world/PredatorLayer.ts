@@ -1,6 +1,7 @@
 import { Container, Graphics, Sprite, type Texture } from 'pixi.js'
 import type { FrameData } from '../api/types'
 import { blendInto, indexById, type Track } from './interpolation'
+import { prefersReducedMotion } from './motion'
 import { PREDATOR_COLOR, PREDATOR_HUNTING_COLOR } from './palette'
 
 type Predators = FrameData['predators']
@@ -53,10 +54,11 @@ export class PredatorLayer {
     })
   }
 
-  interpolate(t: number, now: number): void {
+  interpolate(t: number, now: number, maxDistance: number): void {
     const predators = this.current
     const previous = this.previous
     if (!predators || !previous) return
+    const pulsing = !prefersReducedMotion()
     predators.ids.forEach((id, index) => {
       const view = this.views.get(id)
       if (!view) return
@@ -65,9 +67,11 @@ export class PredatorLayer {
       track.y = predators.y[index]
       track.heading = predators.heading[index]
       const from = this.previousIndex.get(id)
-      if (from !== undefined) blendInto(track, previous.x[from], previous.y[from], previous.heading[from], t)
+      if (from !== undefined) blendInto(track, previous.x[from], previous.y[from], previous.heading[from], t, maxDistance)
       view.root.position.set(track.x, track.y)
       view.body.rotation = track.heading + Math.PI / 2
+      view.pulse.visible = pulsing
+      if (!pulsing) return
       const period = predators.state[index] === 'hunting' ? 450 : 1100
       const progress = (now / period + view.phase) % 1
       view.pulse.scale.set(1 + progress * 1.6)

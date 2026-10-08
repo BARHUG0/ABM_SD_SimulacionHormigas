@@ -7,11 +7,12 @@ import { useUi } from './ui'
 export function useShortcuts(scene: WorldScene | null): void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.repeat && event.key !== 'ArrowRight') return
+      if (event.defaultPrevented || (event.repeat && event.key !== 'ArrowRight')) return
       const action = shortcutFor(event)
       if (!action) return
-      event.preventDefault()
       const ui = useUi.getState()
+      if (ui.summaryOpen && action.type !== 'escape') return
+      event.preventDefault()
       switch (action.type) {
         case 'toggle-play':
           void togglePlay()
