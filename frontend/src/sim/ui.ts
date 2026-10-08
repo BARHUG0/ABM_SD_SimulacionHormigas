@@ -25,7 +25,12 @@ export interface HoveredAnt {
   screenY: number
 }
 
+export type DrawerTab = 'nest' | 'charts' | 'parameters'
+
 interface UiStore {
+  drawerOpen: boolean
+  drawerTab: DrawerTab
+  setDrawer: (open: boolean, tab?: DrawerTab) => void
   visibleLayers: Record<OverlayLayer, boolean>
   hoveredAnt: HoveredAnt | null
   tool: Tool
@@ -43,6 +48,9 @@ const MAX_TOASTS = 4
 let nextToastId = 1
 
 export const useUi = create<UiStore>()((set) => ({
+  drawerOpen: false,
+  drawerTab: 'nest',
+  setDrawer: (drawerOpen, tab) => set((state) => ({ drawerOpen, drawerTab: tab ?? state.drawerTab })),
   visibleLayers: { pheromone_food: true, pheromone_home: true, pheromone_alarm: false, food: true },
   hoveredAnt: null,
   tool: 'pan',

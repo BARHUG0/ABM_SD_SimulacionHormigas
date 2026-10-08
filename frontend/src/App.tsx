@@ -1,5 +1,6 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { useEffect, useState } from 'react'
+import { Drawer } from './components/Drawer'
 import { StartScreen } from './components/StartScreen'
 import { Toasts } from './components/Toasts'
 import { ToolPalette } from './components/ToolPalette'
@@ -26,6 +27,7 @@ function SimulationView() {
       <WorldCanvas onReady={setScene} />
       <TopBar />
       <ToolPalette scene={scene} />
+      <Drawer />
     </main>
   )
 }

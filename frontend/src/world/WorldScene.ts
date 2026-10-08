@@ -16,7 +16,7 @@ export interface PointerHandler {
 }
 
 const HOVER_RADIUS_PX = 10
-const VIEW_INSETS = { top: 88, right: 16, bottom: 92, left: 80 }
+const VIEW_INSETS = { top: 88, right: 72, bottom: 92, left: 80 }
 
 export class WorldScene {
   readonly app: Application

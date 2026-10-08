@@ -48,6 +48,15 @@
   }
 }
 
+.u-legend {
+  color: var(--color-sand-200);
+  font-size: 11px;
+}
+
+.u-legend .u-marker {
+  border-radius: 9999px;
+}
+
 @utility panel {
   background: color-mix(in srgb, var(--color-soil-900) 88%, transparent);
   border: 1px solid var(--color-soil-700);
