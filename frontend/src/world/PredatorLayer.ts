@@ -1,6 +1,6 @@
 import { Container, Graphics, Sprite, type Texture } from 'pixi.js'
 import type { FrameData } from '../api/types'
-import { blend, indexById } from './interpolation'
+import { blendInto, indexById, type Track } from './interpolation'
 import { PREDATOR_COLOR, PREDATOR_HUNTING_COLOR } from './palette'
 
 type Predators = FrameData['predators']
@@ -21,6 +21,7 @@ export class PredatorLayer {
   private current: Predators | null = null
   private previous: Predators | null = null
   private previousIndex = new Map<number, number>()
+  private readonly track: Track = { x: 0, y: 0, heading: 0 }
 
   constructor(texture: Texture) {
     this.texture = texture
@@ -59,10 +60,12 @@ export class PredatorLayer {
     predators.ids.forEach((id, index) => {
       const view = this.views.get(id)
       if (!view) return
-      const target = { x: predators.x[index], y: predators.y[index], heading: predators.heading[index] }
+      const track = this.track
+      track.x = predators.x[index]
+      track.y = predators.y[index]
+      track.heading = predators.heading[index]
       const from = this.previousIndex.get(id)
-      const track =
-        from === undefined ? target : blend(previous.x[from], previous.y[from], previous.heading[from], target, t)
+      if (from !== undefined) blendInto(track, previous.x[from], previous.y[from], previous.heading[from], t)
       view.root.position.set(track.x, track.y)
       view.body.rotation = track.heading + Math.PI / 2
       const period = predators.state[index] === 'hunting' ? 450 : 1100

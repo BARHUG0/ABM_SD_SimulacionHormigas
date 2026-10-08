@@ -57,10 +57,6 @@ export class Camera {
     return { x: (screen.x - this.x) / this.scale, y: (screen.y - this.y) / this.scale }
   }
 
-  toScreen(world: Point): Point {
-    return { x: world.x * this.scale + this.x, y: world.y * this.scale + this.y }
-  }
-
   private apply(): void {
     this.target.position.set(this.x, this.y)
     this.target.scale.set(this.scale)

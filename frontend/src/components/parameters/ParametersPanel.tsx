@@ -14,7 +14,7 @@ async function updateParameter(spec: ParameterSpec, value: number) {
   const simulationId = currentSimulationId()
   if (!simulationId) return
   const config = await attempt(() => endpoints.updateParameters(simulationId, { [spec.key]: value }))
-  if (config) useSimulation.setState({ config })
+  if (config && currentSimulationId() === simulationId) useSimulation.setState({ config })
 }
 
 function ParameterRow({ spec }: { spec: ParameterSpec }) {

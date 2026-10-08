@@ -26,11 +26,16 @@ function isTyping(target: EventTarget | null): boolean {
   return false
 }
 
+function isControl(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && target.closest('button, a, [role="tab"], [role="checkbox"]') !== null
+}
+
 export function shortcutFor(event: KeyInput): ShortcutAction | null {
   if (event.ctrlKey || event.metaKey || event.altKey) return null
   if (event.key === 'Escape') return { type: 'escape' }
   if (isTyping(event.target)) return null
   const key = event.key.toLowerCase()
+  if ((key === ' ' || key === 'arrowright') && isControl(event.target)) return null
   if (key === ' ') return { type: 'toggle-play' }
   if (key === 'arrowright') return { type: 'step' }
   if (key === 'f') return { type: 'fit' }

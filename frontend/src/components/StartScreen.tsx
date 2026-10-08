@@ -3,6 +3,7 @@ import { Bug, Loader2, Sprout, Sun, Waves } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useScenarios } from '../api/queries'
 import { startScenario } from '../sim/actions'
+import { pluralize } from './format'
 
 const LOOKS: Record<string, { icon: ReactNode; accent: string }> = {
   baseline: { icon: <Sprout size={36} />, accent: 'from-leaf-500/30 text-leaf-400' },
@@ -58,7 +59,7 @@ export function StartScreen() {
               <span className="mt-auto text-xs font-bold text-sand-400">
                 {scenario.events.length === 0
                   ? 'Sin perturbaciones'
-                  : `${scenario.events.length} perturbación programada`}
+                  : pluralize(scenario.events.length, 'perturbación programada', 'perturbaciones programadas')}
               </span>
             </motion.button>
           )

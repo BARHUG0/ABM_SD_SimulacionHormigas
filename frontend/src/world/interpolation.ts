@@ -19,9 +19,11 @@ export interface Track {
   heading: number
 }
 
-export function blend(fromX: number, fromY: number, fromHeading: number, to: Track, t: number): Track {
-  const dx = to.x - fromX
-  const dy = to.y - fromY
-  if (dx * dx + dy * dy > TELEPORT_DISTANCE * TELEPORT_DISTANCE) return to
-  return { x: fromX + dx * t, y: fromY + dy * t, heading: lerpAngle(fromHeading, to.heading, t) }
+export function blendInto(track: Track, fromX: number, fromY: number, fromHeading: number, t: number): void {
+  const dx = track.x - fromX
+  const dy = track.y - fromY
+  if (dx * dx + dy * dy > TELEPORT_DISTANCE * TELEPORT_DISTANCE) return
+  track.x = fromX + dx * t
+  track.y = fromY + dy * t
+  track.heading = lerpAngle(fromHeading, track.heading, t)
 }

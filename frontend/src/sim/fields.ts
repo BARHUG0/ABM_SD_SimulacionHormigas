@@ -29,13 +29,6 @@ export function decodeField(field: FieldData): DecodedField {
   }
 }
 
-export function fieldValueAt(field: DecodedField, worldX: number, worldY: number): number {
-  const column = Math.floor(worldX / field.downsample)
-  const row = Math.floor(worldY / field.downsample)
-  if (column < 0 || row < 0 || column >= field.width || row >= field.height) return 0
-  return (field.bytes[row * field.width + column] / 255) * field.scale
-}
-
 export function colorizeField(field: DecodedField, color: Rgb, gamma = 1): Uint8Array {
   const pixels = new Uint8Array(field.bytes.length * 4)
   for (let index = 0; index < field.bytes.length; index++) {

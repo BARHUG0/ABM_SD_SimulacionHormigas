@@ -26,7 +26,8 @@ export function control(request: Partial<ControlRequest> & Pick<ControlRequest, 
 }
 
 export function togglePlay() {
-  const { status } = useSimulation.getState()
+  const { status, finishReason } = useSimulation.getState()
+  if (finishReason === 'colony_collapsed') return Promise.resolve(undefined)
   return control({ action: status === 'running' ? 'pause' : 'start' })
 }
 
@@ -52,5 +53,6 @@ export function leaveSimulation() {
   const simulationId = currentSimulationId()
   closeSession()
   useUi.getState().setTool('pan')
+  useUi.getState().setPopover(null)
   if (simulationId) void endpoints.deleteSimulation(simulationId).catch(() => undefined)
 }

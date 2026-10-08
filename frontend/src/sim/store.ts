@@ -51,6 +51,7 @@ interface SimulationData {
   liveVersion: number
   lastNotice: Notice | null
   lastError: ErrorBody | null
+  generation: number
 }
 
 interface SimulationActions {
@@ -86,6 +87,7 @@ const initialData = (): SimulationData => ({
   liveVersion: 0,
   lastNotice: null,
   lastError: null,
+  generation: 0,
 })
 
 function mergeEvent(events: EventInfo[], event: EventInfo): EventInfo[] {
@@ -104,21 +106,71 @@ function worldFrom(world: WorldStatic, fields: SimulationData['fields']) {
 }
 
 export const useSimulation = create<SimulationStore>()((set, get) => {
-  const receiveFrame = (frame: FrameData, tick: number, now: number) => {
+  const framePatch = (frame: FrameData, tick: number, now: number): Partial<SimulationData> => {
     const state = get()
+    if (state.frame && tick < state.tick) return {}
     const elapsed = now - state.frameReceivedAt
     const measured = Math.min(Math.max(elapsed, MIN_FRAME_INTERVAL), MAX_FRAME_INTERVAL)
     const frameInterval =
       state.frameReceivedAt === 0 ? DEFAULT_FRAME_INTERVAL : state.frameInterval * 0.7 + measured * 0.3
     state.live.push(tick, frame)
-    set({
+    return {
       previousFrame: state.frame ?? frame,
       frame,
       tick,
       frameReceivedAt: now,
       frameInterval,
       liveVersion: state.liveVersion + 1,
-    })
+    }
+  }
+
+  const messagePatch = (message: ServerMessage, now: number): Partial<SimulationData> => {
+    switch (message.type) {
+      case 'init': {
+        const { info, config, world, events } = message.payload
+        get().live.clear()
+        return {
+          info,
+          config,
+          ...worldFrom(world, {}),
+          events,
+          status: info.status,
+          speed: info.speed,
+          finishReason: info.finish_reason,
+          tick: message.tick,
+          frame: null,
+          previousFrame: null,
+          frameReceivedAt: 0,
+          needsResync: false,
+          generation: get().generation + 1,
+        }
+      }
+      case 'status':
+        return {
+          status: message.payload.status,
+          speed: message.payload.speed,
+          finishReason: message.payload.finish_reason,
+        }
+      case 'config':
+        return { config: message.payload }
+      case 'frame':
+        return framePatch(message.payload, message.tick, now)
+      case 'field': {
+        const field = decodeField(message.payload)
+        return { fields: { ...get().fields, [field.layer]: field } }
+      }
+      case 'event': {
+        const notice = message.payload
+        return {
+          lastNotice: notice,
+          ...(notice.event ? { events: mergeEvent(get().events, notice.event) } : {}),
+        }
+      }
+      case 'error':
+        return { lastError: message.payload }
+      case 'pong':
+        return {}
+    }
   }
 
   return {
@@ -134,63 +186,10 @@ export const useSimulation = create<SimulationStore>()((set, get) => {
     applyMessage: (message, now = performance.now()) => {
       const { lastSeq } = get()
       const skipped = lastSeq > 0 && message.seq > lastSeq + 1
-      set({ lastSeq: message.seq, ...(skipped ? { needsResync: true } : {}) })
-
-      switch (message.type) {
-        case 'init': {
-          const { info, config, world, events } = message.payload
-          get().live.clear()
-          set({
-            info,
-            config,
-            ...worldFrom(world, {}),
-            events,
-            status: info.status,
-            speed: info.speed,
-            finishReason: info.finish_reason,
-            tick: message.tick,
-            frame: null,
-            previousFrame: null,
-            frameReceivedAt: 0,
-            needsResync: false,
-          })
-          break
-        }
-        case 'status':
-          set({
-            status: message.payload.status,
-            speed: message.payload.speed,
-            finishReason: message.payload.finish_reason,
-          })
-          break
-        case 'config':
-          set({ config: message.payload })
-          break
-        case 'frame':
-          receiveFrame(message.payload, message.tick, now)
-          break
-        case 'field': {
-          const field = decodeField(message.payload)
-          set({ fields: { ...get().fields, [field.layer]: field } })
-          break
-        }
-        case 'event': {
-          const notice = message.payload
-          set({
-            lastNotice: notice,
-            ...(notice.event ? { events: mergeEvent(get().events, notice.event) } : {}),
-          })
-          break
-        }
-        case 'error':
-          set({ lastError: message.payload })
-          break
-        case 'pong':
-          break
-      }
+      set({ lastSeq: message.seq, ...(skipped ? { needsResync: true } : {}), ...messagePatch(message, now) })
     },
 
-    applyState: (state, now = performance.now()) => {
+    applyState: (state, now = performance.now()) =>
       set({
         info: state.info,
         config: state.config,
@@ -200,9 +199,8 @@ export const useSimulation = create<SimulationStore>()((set, get) => {
         speed: state.info.speed,
         finishReason: state.info.finish_reason,
         needsResync: false,
-      })
-      receiveFrame(state.frame, state.info.tick, now)
-    },
+        ...framePatch(state.frame, state.info.tick, now),
+      }),
 
     upsertEvent: (event) => set({ events: mergeEvent(get().events, event) }),
   }

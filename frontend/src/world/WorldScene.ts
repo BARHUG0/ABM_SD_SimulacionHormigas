@@ -24,7 +24,6 @@ export class WorldScene {
   readonly root = new Container()
   readonly world = new Container()
   readonly camera: Camera
-  readonly effects = new Container()
   readonly tools = new Container()
   private readonly host: HTMLElement
   private readonly terrain = new Sprite()
@@ -36,7 +35,6 @@ export class WorldScene {
   private readonly predators: PredatorLayer
   private readonly highlight = new Graphics()
   private readonly ownTextures: Texture[]
-  private readonly frameListeners: ((now: number) => void)[] = []
   private worldView: WorldView | null = null
   private frame: unknown = null
   private pointerHandler: PointerHandler | null = null
@@ -76,7 +74,6 @@ export class WorldScene {
       this.fields.obstacles,
       this.eventLayer.container,
       this.nest,
-      this.effects,
       this.ants.container,
       this.predators.container,
       this.highlight,
@@ -95,11 +92,6 @@ export class WorldScene {
     this.pointerHandler = handler
   }
 
-  onFrame(listener: (now: number) => void): () => void {
-    this.frameListeners.push(listener)
-    return () => this.frameListeners.splice(this.frameListeners.indexOf(listener), 1)
-  }
-
   fitView(): void {
     if (!this.worldView) return
     const view = { width: this.host.clientWidth, height: this.host.clientHeight, ...VIEW_INSETS }
@@ -108,10 +100,6 @@ export class WorldScene {
 
   get worldSize(): WorldView | null {
     return this.worldView
-  }
-
-  get antLayer(): AntLayer {
-    return this.ants
   }
 
   get predatorLayer(): PredatorLayer {
@@ -146,7 +134,6 @@ export class WorldScene {
     this.ants.interpolate(t)
     this.predators.interpolate(t, now)
     this.placeHighlight()
-    for (const listener of this.frameListeners) listener(now)
   }
 
   private buildWorld(world: WorldView | null): void {

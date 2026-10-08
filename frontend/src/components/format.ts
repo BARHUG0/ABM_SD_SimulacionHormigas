@@ -10,3 +10,7 @@ export function formatValue(value: number | undefined | null): string {
   if (value === undefined || value === null || Number.isNaN(value)) return '—'
   return decimal.format(value)
 }
+
+export function pluralize(count: number, singular: string, plural: string): string {
+  return `${formatCount(count)} ${count === 1 ? singular : plural}`
+}

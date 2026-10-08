@@ -1,6 +1,6 @@
 import { Particle, ParticleContainer, type Texture } from 'pixi.js'
 import type { FrameData } from '../api/types'
-import { blend, indexById } from './interpolation'
+import { blendInto, indexById, type Track } from './interpolation'
 import { ANT_IDLE_STATE, ANT_STATE_COLORS, SOLDIER_ROLE } from './palette'
 
 type Ants = FrameData['ants']
@@ -17,6 +17,7 @@ export class AntLayer {
   private previous: Ants | null = null
   private previousIndex = new Map<number, number>()
   private currentIndex = new Map<number, number>()
+  private readonly track: Track = { x: 0, y: 0, heading: 0 }
   x = new Float32Array(0)
   y = new Float32Array(0)
 
@@ -39,10 +40,11 @@ export class AntLayer {
 
   sync(frame: FrameData | null, previousFrame: FrameData | null): void {
     const ants = frame?.ants ?? null
+    const previous = previousFrame?.ants ?? ants
+    this.previousIndex = previous === this.current ? this.currentIndex : indexById(previous?.ids ?? [])
+    this.currentIndex = ants === previous ? this.previousIndex : indexById(ants?.ids ?? [])
     this.current = ants
-    this.previous = previousFrame?.ants ?? ants
-    this.previousIndex = indexById(this.previous?.ids ?? [])
-    this.currentIndex = indexById(ants?.ids ?? [])
+    this.previous = previous
     const count = ants?.ids.length ?? 0
     this.resize(count)
     if (!ants) return
@@ -61,11 +63,13 @@ export class AntLayer {
     const ants = this.current
     const previous = this.previous
     if (!ants || !previous) return
+    const track = this.track
     for (let index = 0; index < ants.ids.length; index++) {
-      const target = { x: ants.x[index], y: ants.y[index], heading: ants.heading[index] }
+      track.x = ants.x[index]
+      track.y = ants.y[index]
+      track.heading = ants.heading[index]
       const from = this.previousIndex.get(ants.ids[index])
-      const track =
-        from === undefined ? target : blend(previous.x[from], previous.y[from], previous.heading[from], target, t)
+      if (from !== undefined) blendInto(track, previous.x[from], previous.y[from], previous.heading[from], t)
       const particle = this.particles[index]
       particle.x = track.x
       particle.y = track.y

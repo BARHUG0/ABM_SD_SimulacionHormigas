@@ -1,5 +1,5 @@
 import { BrickWall, Bug, Eraser, Hand, Layers, Maximize2, Wheat } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useUi, type OverlayLayer, type Tool } from '../sim/ui'
 import type { WorldScene } from '../world/WorldScene'
 import { IconButton } from './ui/IconButton'
@@ -23,8 +23,8 @@ export function ToolPalette({ scene }: { scene: WorldScene | null }) {
   const tool = useUi((state) => state.tool)
   const brushSize = useUi((state) => state.brushSize)
   const visibleLayers = useUi((state) => state.visibleLayers)
-  const { setTool, setBrushSize, toggleLayer } = useUi.getState()
-  const [optionsOpen, setOptionsOpen] = useState(false)
+  const optionsOpen = useUi((state) => state.popover?.kind === 'tools')
+  const { setTool, setBrushSize, toggleLayer, setPopover } = useUi.getState()
 
   return (
     <aside className="panel pointer-events-auto absolute top-1/2 left-3 z-10 flex w-14 -translate-y-1/2 flex-col items-center gap-1 py-2">
@@ -44,7 +44,7 @@ export function ToolPalette({ scene }: { scene: WorldScene | null }) {
       ))}
 
       <div className="mt-1 flex flex-col gap-1 border-t border-soil-700 pt-1">
-        <IconButton label="Pincel y capas" active={optionsOpen} onClick={() => setOptionsOpen(!optionsOpen)}>
+        <IconButton label="Pincel y capas" active={optionsOpen} onClick={() => setPopover(optionsOpen ? null : { kind: 'tools' })}>
           <Layers size={18} />
         </IconButton>
         <IconButton label="Encuadrar el mundo" shortcut="F" onClick={() => scene?.fitView()}>
@@ -54,7 +54,7 @@ export function ToolPalette({ scene }: { scene: WorldScene | null }) {
 
       {optionsOpen && (
         <div className="panel absolute top-0 left-16 flex w-48 flex-col gap-2 px-3 py-3">
-          <label className="text-xs font-bold text-sand-400">Pincel: {brushSize}</label>
+          <span className="text-xs font-bold text-sand-400">Pincel: {brushSize}</span>
           <Slider label="Tamaño del pincel" value={brushSize} min={1} max={10} step={1} onChange={setBrushSize} />
           <div className="mt-1 text-xs font-bold text-sand-400">Capas</div>
           {LAYERS.map((item) => (

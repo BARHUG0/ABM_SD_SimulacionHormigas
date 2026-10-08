@@ -24,8 +24,17 @@ function Counter({ icon, label, value, tone }: { icon: ReactNode; label: string;
 function ConnectionBadge() {
   const connection = useSimulation((state) => state.connection)
   if (connection === 'open') return null
-  const text = connection === 'closed' ? 'Sin conexión' : 'Conectando…'
-  return <span className="rounded-full bg-ember-500/20 px-3 py-1 text-xs font-bold text-ember-400">{text}</span>
+  if (connection !== 'closed') {
+    return <span className="rounded-full bg-ember-500/20 px-3 py-1 text-xs font-bold text-ember-400">Conectando…</span>
+  }
+  return (
+    <span className="flex items-center gap-2 rounded-full bg-ember-500/20 px-3 py-1 text-xs font-bold text-ember-400">
+      Sin conexión
+      <button onClick={leaveSimulation} className="text-sand-100 underline">
+        Volver al inicio
+      </button>
+    </span>
+  )
 }
 
 export function TopBar() {
@@ -40,6 +49,7 @@ export function TopBar() {
   const scenarioName = scenarios?.find((scenario) => scenario.id === scenarioId)?.name
   const running = status === 'running'
   const finished = status === 'finished'
+  const collapsed = useSimulation((state) => state.finishReason === 'colony_collapsed')
 
   return (
     <header className="panel pointer-events-auto absolute top-3 right-3 left-3 z-10 flex items-center gap-3 px-3 py-2">
@@ -52,6 +62,7 @@ export function TopBar() {
         <IconButton
           label={running ? 'Pausar' : status === 'created' ? 'Iniciar' : 'Reanudar'}
           shortcut="Espacio"
+          disabled={collapsed}
           onClick={() => void togglePlay()}
           active={running}
         >
@@ -73,6 +84,7 @@ export function TopBar() {
           <button
             key={option}
             onClick={() => void control({ action: 'set_speed', speed: option })}
+            aria-pressed={speed === option}
             className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition-colors duration-150 ${
               speed === option ? 'bg-sand-200 text-soil-950' : 'text-sand-300 hover:bg-soil-700'
             }`}

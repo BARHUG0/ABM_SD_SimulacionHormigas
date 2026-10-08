@@ -25,10 +25,13 @@ function ToastItem({ toast }: { toast: Toast }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.2 }}
-      className={`panel border-l-4 px-4 py-2 text-sm font-semibold text-sand-100 ${TONES[toast.tone]}`}
-      onClick={() => dismiss(toast.id)}
     >
-      {toast.text}
+      <button
+        onClick={() => dismiss(toast.id)}
+        className={`panel w-full border-l-4 px-4 py-2 text-left text-sm font-semibold text-sand-100 ${TONES[toast.tone]}`}
+      >
+        {toast.text}
+      </button>
     </motion.li>
   )
 }
@@ -36,12 +39,14 @@ function ToastItem({ toast }: { toast: Toast }) {
 export function Toasts() {
   const toasts = useUi((state) => state.toasts)
   return (
-    <ul className="pointer-events-auto absolute top-24 left-1/2 z-30 flex w-80 -translate-x-1/2 flex-col gap-2">
-      <AnimatePresence>
-        {toasts.map((toast) => (
-          <ToastItem key={toast.id} toast={toast} />
-        ))}
-      </AnimatePresence>
-    </ul>
+    <div role="status" aria-live="polite" className="pointer-events-auto absolute top-24 left-1/2 z-30 w-80 -translate-x-1/2">
+      <ul className="flex flex-col gap-2">
+        <AnimatePresence>
+          {toasts.map((toast) => (
+            <ToastItem key={toast.id} toast={toast} />
+          ))}
+        </AnimatePresence>
+      </ul>
+    </div>
   )
 }

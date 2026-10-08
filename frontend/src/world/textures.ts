@@ -77,25 +77,6 @@ export function predatorTexture(): Texture {
   return Texture.from(element)
 }
 
-export function rippleTexture(): Texture {
-  const size = 64
-  const [element, context] = canvas(size, size)
-  context.fillStyle = 'rgba(61, 143, 209, 0.38)'
-  context.fillRect(0, 0, size, size)
-  context.strokeStyle = 'rgba(190, 228, 255, 0.45)'
-  context.lineWidth = 2
-  for (let row = 0; row < 4; row++) {
-    context.beginPath()
-    for (let x = 0; x <= size; x += 2) {
-      const y = row * 16 + 8 + Math.sin((x / size) * Math.PI * 2 + row) * 3
-      if (x === 0) context.moveTo(x, y)
-      else context.lineTo(x, y)
-    }
-    context.stroke()
-  }
-  return Texture.from(element)
-}
-
 export class FieldTexture {
   readonly texture: Texture
   readonly width: number

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { HeartPulse, Skull, Sprout, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { endpoints } from '../api/endpoints'
 import type { SurvivalSummary } from '../api/types'
 import { PERTURBATIONS } from '../sim/perturbations'
@@ -135,6 +135,14 @@ export function ResilienceCard() {
     enabled: open && simulationId !== null,
     staleTime: 0,
   })
+  const closeButton = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    closeButton.current?.focus()
+    return () => previous?.focus()
+  }, [open])
 
   return (
     <AnimatePresence>
@@ -146,7 +154,6 @@ export function ResilienceCard() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onPointerDown={(event) => {
-            event.stopPropagation()
             if (event.target === event.currentTarget) close()
           }}
         >
@@ -166,6 +173,7 @@ export function ResilienceCard() {
                 Resiliencia de la colonia
               </h2>
               <button
+                ref={closeButton}
                 onClick={close}
                 aria-label="Cerrar resumen"
                 className="ml-auto rounded-lg p-1.5 text-sand-300 hover:bg-soil-700"

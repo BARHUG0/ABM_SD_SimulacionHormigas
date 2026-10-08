@@ -30,6 +30,7 @@ export function useShortcuts(scene: WorldScene | null): void {
           break
         case 'escape':
           if (ui.summaryOpen) ui.setSummaryOpen(false)
+          else if (ui.popover) ui.setPopover(null)
           else if (ui.tool !== 'pan') ui.setTool('pan')
           else ui.setDrawer(false)
           break

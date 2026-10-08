@@ -19,9 +19,10 @@ let resyncing = false
 async function resync(simulationId: string): Promise<void> {
   resyncing = true
   try {
-    useSimulation.getState().applyState(await endpoints.state(simulationId))
+    const state = await endpoints.state(simulationId)
+    if (useSimulation.getState().simulationId === simulationId) useSimulation.getState().applyState(state)
   } catch {
-    useSimulation.setState({ needsResync: false })
+    if (useSimulation.getState().simulationId === simulationId) useSimulation.setState({ needsResync: false })
   } finally {
     resyncing = false
   }

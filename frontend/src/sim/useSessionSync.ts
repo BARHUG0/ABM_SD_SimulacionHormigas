@@ -25,6 +25,9 @@ export function useSessionSync(): void {
   useEffect(
     () =>
       useSimulation.subscribe((state, previous) => {
+        if (state.lastError && state.lastError !== previous.lastError) {
+          useUi.getState().pushToast(state.lastError.message, 'error')
+        }
         if (!state.lastNotice || state.lastNotice === previous.lastNotice) return
         const toast = noticeToast(state.lastNotice)
         if (toast) useUi.getState().pushToast(toast.text, toast.tone)

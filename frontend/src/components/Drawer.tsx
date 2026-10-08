@@ -2,6 +2,7 @@ import * as Tabs from '@radix-ui/react-tabs'
 import { ChartLine, Network, SlidersHorizontal, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import type { ReactNode } from 'react'
+import { useSimulation } from '../sim/store'
 import { useUi, type DrawerTab } from '../sim/ui'
 import { ChartsPanel } from './charts/ChartsPanel'
 import { NestDiagram } from './nest/NestDiagram'
@@ -16,8 +17,13 @@ interface TabSpec {
   content: () => ReactNode
 }
 
+function NestPanel() {
+  const generation = useSimulation((state) => state.generation)
+  return <NestDiagram key={generation} />
+}
+
 const TABS: TabSpec[] = [
-  { id: 'nest', label: 'Nido', shortcut: 'N', icon: <Network size={20} />, content: () => <NestDiagram /> },
+  { id: 'nest', label: 'Nido', shortcut: 'N', icon: <Network size={20} />, content: () => <NestPanel /> },
   { id: 'charts', label: 'Gráficas', shortcut: 'G', icon: <ChartLine size={20} />, content: () => <ChartsPanel /> },
   { id: 'parameters', label: 'Parámetros', shortcut: 'P', icon: <SlidersHorizontal size={20} />, content: () => <ParametersPanel /> },
 ]
@@ -40,7 +46,6 @@ export function Drawer() {
             exit={{ opacity: 0, x: 24 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="panel pointer-events-auto flex h-full w-[380px] flex-col overflow-hidden"
-            onPointerDown={(event) => event.stopPropagation()}
           >
             <Tabs.Root
               value={tab}

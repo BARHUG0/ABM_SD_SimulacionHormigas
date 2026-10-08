@@ -1,10 +1,9 @@
 import { create } from 'zustand'
+import type { PerturbationType } from '../api/types'
 
 export type OverlayLayer = 'pheromone_food' | 'pheromone_home' | 'pheromone_alarm' | 'food'
 
 export type Tool = 'pan' | 'obstacle' | 'food' | 'predator' | 'erase'
-
-export const EDIT_TOOLS: Tool[] = ['obstacle', 'food', 'predator', 'erase']
 
 export type ToastTone = 'info' | 'success' | 'warning' | 'error'
 
@@ -27,12 +26,16 @@ export interface HoveredAnt {
 
 export type DrawerTab = 'nest' | 'charts' | 'parameters'
 
+export type Popover = { kind: 'tools' } | { kind: 'launch'; type: PerturbationType } | { kind: 'event'; id: string }
+
 interface UiStore {
   drawerOpen: boolean
   drawerTab: DrawerTab
   setDrawer: (open: boolean, tab?: DrawerTab) => void
   summaryOpen: boolean
   setSummaryOpen: (open: boolean) => void
+  popover: Popover | null
+  setPopover: (popover: Popover | null) => void
   visibleLayers: Record<OverlayLayer, boolean>
   hoveredAnt: HoveredAnt | null
   tool: Tool
@@ -52,9 +55,16 @@ let nextToastId = 1
 export const useUi = create<UiStore>()((set) => ({
   drawerOpen: false,
   drawerTab: 'nest',
-  setDrawer: (drawerOpen, tab) => set((state) => ({ drawerOpen, drawerTab: tab ?? state.drawerTab })),
+  setDrawer: (drawerOpen, tab) =>
+    set((state) => ({
+      drawerOpen,
+      drawerTab: tab ?? state.drawerTab,
+      popover: drawerOpen ? null : state.popover,
+    })),
   summaryOpen: false,
   setSummaryOpen: (summaryOpen) => set({ summaryOpen }),
+  popover: null,
+  setPopover: (popover) => set({ popover }),
   visibleLayers: { pheromone_food: true, pheromone_home: true, pheromone_alarm: false, food: true },
   hoveredAnt: null,
   tool: 'pan',

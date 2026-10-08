@@ -38,6 +38,24 @@ describe('simulation store', () => {
     expect(store().live.ticks).toEqual([1, 2])
   })
 
+  it('ignores frames older than the current tick', () => {
+    store().applyMessage(frameMessage(2, 5, makeFrame(100)), 100)
+    store().applyMessage(frameMessage(3, 4, makeFrame(90)), 133)
+    expect(store().tick).toBe(5)
+    expect(store().frame?.nest.stocks.workers).toBe(100)
+    expect(store().live.ticks).toEqual([5])
+    store().applyMessage(frameMessage(4, 5, makeFrame(101)), 166)
+    expect(store().frame?.nest.stocks.workers).toBe(101)
+  })
+
+  it('accepts lower ticks again after a new init', () => {
+    store().applyMessage(frameMessage(2, 50, makeFrame(100)), 100)
+    store().applyMessage(initMessage(3), 133)
+    store().applyMessage(frameMessage(4, 1, makeFrame(10)), 166)
+    expect(store().tick).toBe(1)
+    expect(store().live.ticks).toEqual([1])
+  })
+
   it('decodes field messages into the field map', () => {
     const message: ServerMessage = { type: 'field', seq: 2, tick: 0, sim_time: 0, payload: makeField() }
     store().applyMessage(message)

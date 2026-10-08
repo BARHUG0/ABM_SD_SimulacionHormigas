@@ -90,8 +90,9 @@ function useFullTable(enabled: boolean): SeriesTable | null {
   const simulationId = useSimulation((state) => state.simulationId)
   const running = useSimulation((state) => state.status === 'running')
   const every = useSimulation((state) => Math.max(1, Math.ceil(state.tick / TARGET_POINTS)))
+  const pausedTick = useSimulation((state) => (state.status === 'running' ? null : state.tick))
   const { data } = useQuery({
-    queryKey: ['history', simulationId, every],
+    queryKey: ['history', simulationId, every, pausedTick],
     queryFn: () => endpoints.history(simulationId!, CHART_KEYS as HistoryKey[], every),
     enabled: enabled && simulationId !== null,
     refetchInterval: running ? FULL_REFRESH_MS : false,
@@ -115,6 +116,7 @@ export function ChartsPanel() {
           <button
             key={option}
             onClick={() => setRange(option)}
+            aria-pressed={range === option}
             className={`rounded-lg px-3 py-1.5 transition-colors duration-150 ${
               range === option ? 'bg-sand-200 text-soil-950' : 'text-sand-300 hover:bg-soil-700'
             }`}

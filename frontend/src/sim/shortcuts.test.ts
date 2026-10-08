@@ -21,6 +21,15 @@ describe('shortcutFor', () => {
     expect(press('ArrowRight', slider)).toBeNull()
   })
 
+  it('leaves space and arrows to focused buttons and tabs', () => {
+    const button = document.createElement('button')
+    const tab = document.createElement('div')
+    tab.setAttribute('role', 'tab')
+    expect(press(' ', button)).toBeNull()
+    expect(press('ArrowRight', tab)).toBeNull()
+    expect(press('2', button)).toEqual({ type: 'tool', tool: 'food' })
+  })
+
   it('always allows escape and ignores modified keys', () => {
     expect(press('Escape', document.createElement('input'))).toEqual({ type: 'escape' })
     expect(press('1', document.body, { ctrlKey: true })).toBeNull()

@@ -41,6 +41,7 @@ export function attachWorldTools(scene: WorldScene): () => void {
   let lastCell: [number, number] | null = null
   let strokeMode: 'add' | 'erase' | null = null
   let flushTimer: ReturnType<typeof setInterval> | null = null
+  let inFlight = 0
 
   const worldSize = () => scene.worldSize
   const toCell = (point: Point): [number, number] | null => {
@@ -70,14 +71,16 @@ export function attachWorldTools(scene: WorldScene): () => void {
     pending = pending.slice(cells.length)
     const { brushSize } = useUi.getState()
     const mode = strokeMode
+    inFlight++
     void attempt(async () => {
       await endpoints.paintObstacles(simulationId, cells, brushSize, mode)
       if (mode === 'erase') {
-        const [x, y] = cells[cells.length - 1]
-        await endpoints.placeFood(simulationId, x, y, foodRadius(brushSize), 'erase')
+        const spots = cells.filter((_, index) => index % brushSize === 0 || index === cells.length - 1)
+        await Promise.all(spots.map(([x, y]) => endpoints.placeFood(simulationId, x, y, brushSize, 'erase')))
       }
     }).finally(() => {
-      if (!strokeMode) stroke.clear()
+      inFlight--
+      if (!strokeMode && inFlight === 0) stroke.clear()
     })
   }
 
@@ -88,6 +91,7 @@ export function attachWorldTools(scene: WorldScene): () => void {
     strokeMode = null
     seen = new Set()
     lastCell = null
+    if (inFlight === 0) stroke.clear()
   }
 
   const removePredatorNear = (point: Point): boolean => {

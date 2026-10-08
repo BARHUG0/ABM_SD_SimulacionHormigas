@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { encodeBytes, makeField } from '../test/fixtures'
-import { colorizeField, decodeField, fieldValueAt } from './fields'
+import { colorizeField, decodeField } from './fields'
 
 describe('decodeField', () => {
   it('turns base64 rows into bytes', () => {
@@ -12,26 +12,6 @@ describe('decodeField', () => {
 
   it('rejects data whose length does not match the grid', () => {
     expect(() => decodeField(makeField({ data: encodeBytes([1, 2, 3]) }))).toThrow(/se esperaban 4/)
-  })
-})
-
-describe('fieldValueAt', () => {
-  it('scales bytes back to real values', () => {
-    const field = decodeField(makeField())
-    expect(fieldValueAt(field, 1, 0)).toBeCloseTo(2)
-    expect(fieldValueAt(field, 0, 1)).toBeCloseTo(10)
-  })
-
-  it('maps world cells through the downsample factor', () => {
-    const field = decodeField(makeField({ downsample: 4 }))
-    expect(fieldValueAt(field, 7.5, 0)).toBeCloseTo(2)
-    expect(fieldValueAt(field, 3, 5)).toBeCloseTo(10)
-  })
-
-  it('returns zero outside the grid', () => {
-    const field = decodeField(makeField())
-    expect(fieldValueAt(field, -1, 0)).toBe(0)
-    expect(fieldValueAt(field, 5, 5)).toBe(0)
   })
 })
 

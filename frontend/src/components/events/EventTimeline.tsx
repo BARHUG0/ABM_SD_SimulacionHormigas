@@ -14,7 +14,8 @@ import {
   type LaunchOptions,
 } from '../../sim/perturbations'
 import { useSimulation } from '../../sim/store'
-import { formatCount, formatValue } from '../format'
+import { useUi } from '../../sim/ui'
+import { formatCount, formatValue, pluralize } from '../format'
 import { IconButton } from '../ui/IconButton'
 import { Slider } from '../ui/Slider'
 
@@ -37,14 +38,14 @@ async function launch(type: PerturbationType, options: LaunchOptions) {
   const event = await attempt(() =>
     endpoints.createEvent(simulationId, eventRequest(type, options, useSimulation.getState().world)),
   )
-  if (event) useSimulation.getState().upsertEvent(event)
+  if (event && currentSimulationId() === simulationId) useSimulation.getState().upsertEvent(event)
 }
 
 async function cancel(eventId: string) {
   const simulationId = currentSimulationId()
   if (!simulationId) return
   const event = await attempt(() => endpoints.cancelEvent(simulationId, eventId))
-  if (event) useSimulation.getState().upsertEvent(event)
+  if (event && currentSimulationId() === simulationId) useSimulation.getState().upsertEvent(event)
 }
 
 function LaunchCard({ type, onClose }: { type: PerturbationType; onClose: () => void }) {
@@ -180,11 +181,13 @@ function EventDetails({ event, onClose }: { event: EventInfo; onClose: () => voi
 }
 
 export function EventTimeline() {
-  const tick = useSimulation((state) => state.tick)
+  const tick = useSimulation((state) => Math.floor(state.tick / 10) * 10)
   const events = useSimulation((state) => state.events)
   const finished = useSimulation((state) => state.status === 'finished')
-  const [launching, setLaunching] = useState<PerturbationType | null>(null)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const popover = useUi((state) => state.popover)
+  const setPopover = useUi((state) => state.setPopover)
+  const launching = popover?.kind === 'launch' ? popover.type : null
+  const selectedId = popover?.kind === 'event' ? popover.id : null
   const coarseTick = Math.floor(tick / 50) * 50
   const domain = useMemo(() => timelineDomain(coarseTick, events), [coarseTick, events])
   const shown = useMemo(() => visibleEvents(events, domain), [events, domain])
@@ -193,10 +196,7 @@ export function EventTimeline() {
   const position = (value: number) => `${(Math.min(Math.max(value - domain.start, 0), span) / span) * 100}%`
 
   return (
-    <div
-      className="panel pointer-events-auto absolute bottom-3 left-3 z-10 flex w-[min(820px,calc(100%-5.5rem))] items-center gap-3 px-3 py-2"
-      onPointerDown={(event) => event.stopPropagation()}
-    >
+    <div className="panel pointer-events-auto absolute bottom-3 left-3 z-10 flex w-[min(820px,calc(100%-5.5rem))] items-center gap-3 px-3 py-2">
       <div className="relative flex items-center gap-1 rounded-xl bg-soil-800/80 p-1" role="group" aria-label="Perturbaciones">
         {PERTURBATION_ORDER.map((type) => (
           <IconButton
@@ -204,28 +204,26 @@ export function EventTimeline() {
             label={PERTURBATIONS[type].label}
             active={launching === type}
             disabled={finished}
-            onClick={() => {
-              setSelectedId(null)
-              setLaunching(launching === type ? null : type)
-            }}
+            onClick={() => setPopover(launching === type ? null : { kind: 'launch', type })}
           >
             {ICONS[type]}
           </IconButton>
         ))}
         <AnimatePresence>
-          {launching && <LaunchCard key={launching} type={launching} onClose={() => setLaunching(null)} />}
+          {launching && <LaunchCard key={launching} type={launching} onClose={() => setPopover(null)} />}
         </AnimatePresence>
       </div>
 
       <div className="relative flex-1">
-        <div className="relative h-9 rounded-lg bg-soil-800/80" aria-label="Línea de tiempo de perturbaciones">
+        <div
+          className="relative h-9 rounded-lg bg-soil-800/80"
+          role="group"
+          aria-label="Línea de tiempo de perturbaciones"
+        >
           {shown.map((event) => (
             <button
               key={event.id}
-              onClick={() => {
-                setLaunching(null)
-                setSelectedId(selectedId === event.id ? null : event.id)
-              }}
+              onClick={() => setPopover(selectedId === event.id ? null : { kind: 'event', id: event.id })}
               aria-label={`${PERTURBATIONS[event.type].label}, ${STATUS_LABELS[event.status]}`}
               className={`absolute h-2 min-w-2 rounded-sm transition-opacity duration-150 hover:opacity-100 ${
                 event.status === 'active' ? 'animate-pulse opacity-100' : event.status === 'finished' ? 'opacity-40' : 'opacity-80'
@@ -245,11 +243,11 @@ export function EventTimeline() {
         </div>
         <div className="mt-0.5 flex justify-between text-[10px] text-sand-500 tabular-nums">
           <span>{formatCount(domain.start)}</span>
-          <span>{shown.length === 0 ? 'Sin perturbaciones' : `${shown.length} perturbaciones`}</span>
+          <span>{shown.length === 0 ? 'Sin perturbaciones' : pluralize(shown.length, 'perturbación', 'perturbaciones')}</span>
           <span>{formatCount(domain.end)}</span>
         </div>
         <AnimatePresence>
-          {selected && <EventDetails key={selected.id} event={selected} onClose={() => setSelectedId(null)} />}
+          {selected && <EventDetails key={selected.id} event={selected} onClose={() => setPopover(null)} />}
         </AnimatePresence>
       </div>
     </div>
