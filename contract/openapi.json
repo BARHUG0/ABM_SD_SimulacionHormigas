@@ -1,0 +1,3898 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Hormiguero Vivo API",
+    "description": "Simulación híbrida ABM + SD de una colonia de hormigas",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Health",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/parameters/schema": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Parameter Schema",
+        "operationId": "parameter_schema_api_v1_parameters_schema_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ParameterSpec"
+                  },
+                  "type": "array",
+                  "title": "Response Parameter Schema Api V1 Parameters Schema Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scenarios": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "List Scenarios",
+        "operationId": "list_scenarios_api_v1_scenarios_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScenarioInfo"
+                  },
+                  "type": "array",
+                  "title": "Response List Scenarios Api V1 Scenarios Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ws/schema": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Websocket Schema",
+        "operationId": "websocket_schema_api_v1_ws_schema_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WsSchemaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations": {
+      "get": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "List Simulations",
+        "operationId": "list_simulations_api_v1_simulations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SimulationInfo"
+                  },
+                  "type": "array",
+                  "title": "Response List Simulations Api V1 Simulations Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Create Simulation",
+        "operationId": "create_simulation_api_v1_simulations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}": {
+      "get": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Get Simulation Info",
+        "operationId": "get_simulation_info_api_v1_simulations__simulation_id__get",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Delete Simulation",
+        "operationId": "delete_simulation_api_v1_simulations__simulation_id__delete",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/control": {
+      "post": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Control Simulation",
+        "operationId": "control_simulation_api_v1_simulations__simulation_id__control_post",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/parameters": {
+      "get": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Get Parameters",
+        "operationId": "get_parameters_api_v1_simulations__simulation_id__parameters_get",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationConfig"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Update Parameters",
+        "operationId": "update_parameters_api_v1_simulations__simulation_id__parameters_patch",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParameterUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationConfig"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/state": {
+      "get": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Get State",
+        "operationId": "get_state_api_v1_simulations__simulation_id__state_get",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationState"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/fields/{layer}": {
+      "get": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Get Field",
+        "operationId": "get_field_api_v1_simulations__simulation_id__fields__layer__get",
+        "parameters": [
+          {
+            "name": "layer",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/FieldLayer"
+            }
+          },
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          },
+          {
+            "name": "downsample",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 8,
+              "minimum": 1,
+              "default": 1,
+              "title": "Downsample"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FieldData"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/history": {
+      "get": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Get History",
+        "operationId": "get_history_api_v1_simulations__simulation_id__history_get",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          },
+          {
+            "name": "keys",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HistoryKey"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Keys"
+            }
+          },
+          {
+            "name": "from_tick",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "From Tick"
+            }
+          },
+          {
+            "name": "to_tick",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Tick"
+            }
+          },
+          {
+            "name": "every",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 1,
+              "title": "Every"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/metrics/summary": {
+      "get": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Get Summary",
+        "operationId": "get_summary_api_v1_simulations__simulation_id__metrics_summary_get",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurvivalSummary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/export": {
+      "get": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Export History",
+        "operationId": "export_history_api_v1_simulations__simulation_id__export_get",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ExportFormat",
+              "default": "csv"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryResponse"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/world/obstacles": {
+      "post": {
+        "tags": [
+          "world"
+        ],
+        "summary": "Paint Obstacles",
+        "operationId": "paint_obstacles_api_v1_simulations__simulation_id__world_obstacles_post",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrushStroke"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAck"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/world/food": {
+      "post": {
+        "tags": [
+          "world"
+        ],
+        "summary": "Place Food",
+        "operationId": "place_food_api_v1_simulations__simulation_id__world_food_post",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FoodPlacement"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAck"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/predators": {
+      "post": {
+        "tags": [
+          "world"
+        ],
+        "summary": "Place Predators",
+        "operationId": "place_predators_api_v1_simulations__simulation_id__predators_post",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PredatorPlacement"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredatorsCreated"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/predators/{predator_id}": {
+      "delete": {
+        "tags": [
+          "world"
+        ],
+        "summary": "Remove Predator",
+        "operationId": "remove_predator_api_v1_simulations__simulation_id__predators__predator_id__delete",
+        "parameters": [
+          {
+            "name": "predator_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Predator Id"
+            }
+          },
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAck"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/events": {
+      "post": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Create Event",
+        "operationId": "create_event_api_v1_simulations__simulation_id__events_post",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "events"
+        ],
+        "summary": "List Events",
+        "operationId": "list_events_api_v1_simulations__simulation_id__events_get",
+        "parameters": [
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventInfo"
+                  },
+                  "title": "Response List Events Api V1 Simulations  Simulation Id  Events Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulations/{simulation_id}/events/{event_id}": {
+      "get": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Get Event",
+        "operationId": "get_event_api_v1_simulations__simulation_id__events__event_id__get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Cancel Event",
+        "operationId": "cancel_event_api_v1_simulations__simulation_id__events__event_id__delete",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "simulation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Simulation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con el estado actual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AntConfig": {
+        "properties": {
+          "initial_workers": {
+            "type": "integer",
+            "maximum": 2000.0,
+            "minimum": 0.0,
+            "title": "Initial Workers",
+            "description": "Obreras iniciales",
+            "default": 100,
+            "live_editable": false,
+            "unit": "hormigas"
+          },
+          "max_ants": {
+            "type": "integer",
+            "maximum": 5000.0,
+            "minimum": 10.0,
+            "title": "Max Ants",
+            "description": "Población máxima de agentes",
+            "default": 2000,
+            "live_editable": false,
+            "unit": "hormigas"
+          },
+          "speed": {
+            "type": "number",
+            "maximum": 3.0,
+            "minimum": 0.1,
+            "title": "Speed",
+            "description": "Velocidad de las hormigas",
+            "default": 1.0,
+            "live_editable": true,
+            "unit": "celdas/tick"
+          },
+          "sensor_angle": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": 5.0,
+            "title": "Sensor Angle",
+            "description": "Ángulo de los sensores de feromona",
+            "default": 45.0,
+            "live_editable": true,
+            "unit": "grados"
+          },
+          "sensor_distance": {
+            "type": "number",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Sensor Distance",
+            "description": "Distancia de los sensores de feromona",
+            "default": 3.0,
+            "live_editable": true,
+            "unit": "celdas"
+          },
+          "random_turn": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": 0.0,
+            "title": "Random Turn",
+            "description": "Giro aleatorio máximo por tick",
+            "default": 15.0,
+            "live_editable": true,
+            "unit": "grados"
+          },
+          "carry_capacity": {
+            "type": "number",
+            "maximum": 5.0,
+            "minimum": 0.1,
+            "title": "Carry Capacity",
+            "description": "Comida que carga una hormiga",
+            "default": 1.0,
+            "live_editable": true,
+            "unit": "unidades"
+          },
+          "energy_max": {
+            "type": "number",
+            "maximum": 1000.0,
+            "minimum": 10.0,
+            "title": "Energy Max",
+            "description": "Energía máxima de una hormiga",
+            "default": 100.0,
+            "live_editable": false,
+            "unit": "energía"
+          },
+          "energy_decay": {
+            "type": "number",
+            "maximum": 5.0,
+            "minimum": 0.0,
+            "title": "Energy Decay",
+            "description": "Gasto de energía por tick",
+            "default": 0.1,
+            "live_editable": true,
+            "unit": "energía/tick"
+          },
+          "lifespan": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 100.0,
+            "title": "Lifespan",
+            "description": "Esperanza de vida de una obrera",
+            "default": 5000,
+            "live_editable": true,
+            "unit": "ticks"
+          },
+          "soldier_fraction": {
+            "type": "number",
+            "maximum": 0.5,
+            "minimum": 0.0,
+            "title": "Soldier Fraction",
+            "description": "Fracción de nuevas hormigas que nacen soldado",
+            "default": 0.1,
+            "live_editable": true,
+            "unit": "fracción"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "AntConfig"
+      },
+      "AntRole": {
+        "type": "string",
+        "enum": [
+          "forager",
+          "scout",
+          "soldier"
+        ],
+        "title": "AntRole"
+      },
+      "AntState": {
+        "type": "string",
+        "enum": [
+          "searching",
+          "returning",
+          "fleeing",
+          "idle_in_nest"
+        ],
+        "title": "AntState"
+      },
+      "AntsFrame": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Ids"
+          },
+          "x": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "X"
+          },
+          "y": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Y"
+          },
+          "heading": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Heading",
+            "description": "Radianes"
+          },
+          "role": {
+            "items": {
+              "$ref": "#/components/schemas/AntRole"
+            },
+            "type": "array",
+            "title": "Role"
+          },
+          "state": {
+            "items": {
+              "$ref": "#/components/schemas/AntState"
+            },
+            "type": "array",
+            "title": "State"
+          },
+          "carrying": {
+            "items": {
+              "type": "boolean"
+            },
+            "type": "array",
+            "title": "Carrying"
+          },
+          "energy": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Energy"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ids",
+          "x",
+          "y",
+          "heading",
+          "role",
+          "state",
+          "carrying",
+          "energy"
+        ],
+        "title": "AntsFrame"
+      },
+      "BrushMode": {
+        "type": "string",
+        "enum": [
+          "add",
+          "erase"
+        ],
+        "title": "BrushMode"
+      },
+      "BrushStroke": {
+        "properties": {
+          "cells": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "maxItems": 5000,
+            "minItems": 1,
+            "title": "Cells",
+            "description": "Celdas [x, y] recorridas por el pincel"
+          },
+          "radius": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Radius",
+            "default": 1
+          },
+          "mode": {
+            "$ref": "#/components/schemas/BrushMode",
+            "default": "add"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cells"
+        ],
+        "title": "BrushStroke"
+      },
+      "CommandAck": {
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "title": "Command Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "applied_at_tick": {
+            "type": "integer",
+            "title": "Applied At Tick"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "command_id",
+          "kind",
+          "applied_at_tick"
+        ],
+        "title": "CommandAck"
+      },
+      "ControlAction": {
+        "type": "string",
+        "enum": [
+          "start",
+          "pause",
+          "step",
+          "reset"
+        ],
+        "title": "ControlAction"
+      },
+      "ControlRequest": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/ControlAction"
+          },
+          "steps": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Steps",
+            "description": "Solo aplica a step",
+            "default": 1
+          },
+          "speed": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 120.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed",
+            "description": "Ticks por segundo"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "ControlRequest"
+      },
+      "DeathsByCause": {
+        "properties": {
+          "predator": {
+            "type": "integer",
+            "title": "Predator",
+            "default": 0
+          },
+          "flood": {
+            "type": "integer",
+            "title": "Flood",
+            "default": 0
+          },
+          "starvation": {
+            "type": "integer",
+            "title": "Starvation",
+            "default": 0
+          },
+          "old_age": {
+            "type": "integer",
+            "title": "Old Age",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "DeathsByCause"
+      },
+      "ErrorBody": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Código estable y legible por máquina"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "details": {
+            "title": "Details"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorBody"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse"
+      },
+      "EventCreate": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/PerturbationType"
+          },
+          "intensity": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Intensity",
+            "default": 0.5
+          },
+          "duration": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Duration",
+            "description": "Duración en ticks. Al terminar una oleada, sus depredadores se retiran",
+            "default": 500
+          },
+          "region": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Region"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Área afectada. Si se omite, se afecta todo el mundo"
+          },
+          "start_tick": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Tick",
+            "description": "Tick de inicio. Si se omite, empieza en el siguiente tick"
+          },
+          "predator_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 50.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predator Count",
+            "description": "Obligatorio para predator_wave"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "title": "EventCreate"
+      },
+      "EventInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "$ref": "#/components/schemas/PerturbationType"
+          },
+          "intensity": {
+            "type": "number",
+            "title": "Intensity"
+          },
+          "duration": {
+            "type": "integer",
+            "title": "Duration"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Region"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "start_tick": {
+            "type": "integer",
+            "title": "Start Tick"
+          },
+          "end_tick": {
+            "type": "integer",
+            "title": "End Tick"
+          },
+          "predator_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predator Count"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EventStatus"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "intensity",
+          "duration",
+          "region",
+          "start_tick",
+          "end_tick",
+          "predator_count",
+          "status"
+        ],
+        "title": "EventInfo"
+      },
+      "EventStatus": {
+        "type": "string",
+        "enum": [
+          "scheduled",
+          "active",
+          "finished",
+          "cancelled"
+        ],
+        "title": "EventStatus"
+      },
+      "ExportFormat": {
+        "type": "string",
+        "enum": [
+          "csv",
+          "json"
+        ],
+        "title": "ExportFormat"
+      },
+      "FieldData": {
+        "properties": {
+          "layer": {
+            "$ref": "#/components/schemas/FieldLayer"
+          },
+          "width": {
+            "type": "integer",
+            "title": "Width"
+          },
+          "height": {
+            "type": "integer",
+            "title": "Height"
+          },
+          "downsample": {
+            "type": "integer",
+            "title": "Downsample"
+          },
+          "encoding": {
+            "type": "string",
+            "const": "uint8_base64",
+            "title": "Encoding"
+          },
+          "scale": {
+            "type": "number",
+            "title": "Scale",
+            "description": "Valor real = byte / 255 * scale"
+          },
+          "data": {
+            "type": "string",
+            "title": "Data",
+            "description": "Bytes uint8 en base64, fila por fila, de largo width * height"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "layer",
+          "width",
+          "height",
+          "downsample",
+          "encoding",
+          "scale",
+          "data"
+        ],
+        "title": "FieldData"
+      },
+      "FieldLayer": {
+        "type": "string",
+        "enum": [
+          "pheromone_food",
+          "pheromone_home",
+          "pheromone_alarm",
+          "food",
+          "obstacles",
+          "water",
+          "moisture"
+        ],
+        "title": "FieldLayer"
+      },
+      "FinishReason": {
+        "type": "string",
+        "enum": [
+          "max_ticks",
+          "colony_collapsed"
+        ],
+        "title": "FinishReason"
+      },
+      "FoodPlacement": {
+        "properties": {
+          "x": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "X"
+          },
+          "y": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Y"
+          },
+          "radius": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Radius",
+            "default": 3
+          },
+          "amount": {
+            "type": "number",
+            "maximum": 10000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Amount",
+            "default": 100.0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "FoodPlacement"
+      },
+      "FrameData": {
+        "properties": {
+          "ants": {
+            "$ref": "#/components/schemas/AntsFrame",
+            "description": "Arreglos paralelos: el índice i describe a la misma hormiga en cada lista"
+          },
+          "predators": {
+            "$ref": "#/components/schemas/PredatorsFrame"
+          },
+          "nest": {
+            "$ref": "#/components/schemas/NestFrame"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/FrameMetrics"
+          },
+          "active_event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Active Event Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ants",
+          "predators",
+          "nest",
+          "metrics",
+          "active_event_ids"
+        ],
+        "title": "FrameData"
+      },
+      "FrameMetrics": {
+        "properties": {
+          "alive_ants": {
+            "type": "integer",
+            "title": "Alive Ants"
+          },
+          "foragers_active": {
+            "type": "integer",
+            "title": "Foragers Active"
+          },
+          "ants_in_nest": {
+            "type": "integer",
+            "title": "Ants In Nest"
+          },
+          "predators": {
+            "type": "integer",
+            "title": "Predators"
+          },
+          "food_in_world": {
+            "type": "number",
+            "title": "Food In World"
+          },
+          "food_delivered_total": {
+            "type": "number",
+            "title": "Food Delivered Total"
+          },
+          "foraging_efficiency": {
+            "type": "number",
+            "title": "Foraging Efficiency",
+            "description": "Comida entregada por hormiga activa y tick"
+          },
+          "deaths": {
+            "$ref": "#/components/schemas/DeathsByCause"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "alive_ants",
+          "foragers_active",
+          "ants_in_nest",
+          "predators",
+          "food_in_world",
+          "food_delivered_total",
+          "foraging_efficiency",
+          "deaths"
+        ],
+        "title": "FrameMetrics"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "version"
+        ],
+        "title": "HealthResponse"
+      },
+      "HistoryKey": {
+        "type": "string",
+        "enum": [
+          "stocks.food",
+          "stocks.eggs",
+          "stocks.larvae",
+          "stocks.workers",
+          "flows.food_income",
+          "flows.consumption",
+          "flows.egg_laying",
+          "flows.hatching",
+          "flows.maturation",
+          "flows.mortality",
+          "nest.forager_fraction",
+          "metrics.alive_ants",
+          "metrics.foragers_active",
+          "metrics.ants_in_nest",
+          "metrics.predators",
+          "metrics.food_in_world",
+          "metrics.food_delivered_total",
+          "metrics.foraging_efficiency"
+        ],
+        "title": "HistoryKey"
+      },
+      "HistoryResponse": {
+        "properties": {
+          "keys": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryKey"
+            },
+            "type": "array",
+            "title": "Keys"
+          },
+          "ticks": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Ticks"
+          },
+          "series": {
+            "additionalProperties": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Series"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "keys",
+          "ticks",
+          "series"
+        ],
+        "title": "HistoryResponse"
+      },
+      "NestConfig": {
+        "properties": {
+          "initial_food": {
+            "type": "number",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Initial Food",
+            "description": "Comida inicial almacenada",
+            "default": 200.0,
+            "live_editable": false,
+            "unit": "unidades"
+          },
+          "initial_eggs": {
+            "type": "number",
+            "maximum": 2000.0,
+            "minimum": 0.0,
+            "title": "Initial Eggs",
+            "description": "Huevos iniciales",
+            "default": 20.0,
+            "live_editable": false,
+            "unit": "huevos"
+          },
+          "initial_larvae": {
+            "type": "number",
+            "maximum": 2000.0,
+            "minimum": 0.0,
+            "title": "Initial Larvae",
+            "description": "Larvas iniciales",
+            "default": 20.0,
+            "live_editable": false,
+            "unit": "larvas"
+          },
+          "worker_consumption": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Worker Consumption",
+            "description": "Consumo de comida por obrera",
+            "default": 0.01,
+            "live_editable": true,
+            "unit": "unidades/obrera/tick"
+          },
+          "larva_consumption": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Larva Consumption",
+            "description": "Consumo de comida por larva",
+            "default": 0.02,
+            "live_editable": true,
+            "unit": "unidades/larva/tick"
+          },
+          "max_egg_laying_rate": {
+            "type": "number",
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Max Egg Laying Rate",
+            "description": "Puesta máxima de la reina",
+            "default": 0.5,
+            "live_editable": true,
+            "unit": "huevos/tick"
+          },
+          "food_half_saturation": {
+            "type": "number",
+            "maximum": 5000.0,
+            "minimum": 1.0,
+            "title": "Food Half Saturation",
+            "description": "Comida a la que la puesta llega a la mitad del máximo",
+            "default": 100.0,
+            "live_editable": true,
+            "unit": "unidades"
+          },
+          "egg_duration": {
+            "type": "number",
+            "maximum": 5000.0,
+            "minimum": 1.0,
+            "title": "Egg Duration",
+            "description": "Tiempo medio de incubación",
+            "default": 200.0,
+            "live_editable": true,
+            "unit": "ticks"
+          },
+          "larva_duration": {
+            "type": "number",
+            "maximum": 5000.0,
+            "minimum": 1.0,
+            "title": "Larva Duration",
+            "description": "Tiempo medio de maduración de larva a obrera",
+            "default": 400.0,
+            "live_editable": true,
+            "unit": "ticks"
+          },
+          "starvation_mortality": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Starvation Mortality",
+            "description": "Mortalidad cuando no hay comida",
+            "default": 0.01,
+            "live_editable": true,
+            "unit": "fracción/tick"
+          },
+          "min_forager_fraction": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Forager Fraction",
+            "description": "Fracción de forrajeo en colonias pequeñas",
+            "default": 0.2,
+            "live_editable": true,
+            "unit": "fracción"
+          },
+          "max_forager_fraction": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Max Forager Fraction",
+            "description": "Fracción de forrajeo en colonias grandes",
+            "default": 0.8,
+            "live_editable": true,
+            "unit": "fracción"
+          },
+          "colony_size_half_saturation": {
+            "type": "number",
+            "maximum": 5000.0,
+            "minimum": 1.0,
+            "title": "Colony Size Half Saturation",
+            "description": "Tamaño de colonia con fracción de forrajeo intermedia",
+            "default": 200.0,
+            "live_editable": true,
+            "unit": "obreras"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "NestConfig"
+      },
+      "NestFlows": {
+        "properties": {
+          "food_income": {
+            "type": "number",
+            "title": "Food Income"
+          },
+          "consumption": {
+            "type": "number",
+            "title": "Consumption"
+          },
+          "egg_laying": {
+            "type": "number",
+            "title": "Egg Laying"
+          },
+          "hatching": {
+            "type": "number",
+            "title": "Hatching"
+          },
+          "maturation": {
+            "type": "number",
+            "title": "Maturation"
+          },
+          "mortality": {
+            "type": "number",
+            "title": "Mortality"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "food_income",
+          "consumption",
+          "egg_laying",
+          "hatching",
+          "maturation",
+          "mortality"
+        ],
+        "title": "NestFlows"
+      },
+      "NestFrame": {
+        "properties": {
+          "stocks": {
+            "$ref": "#/components/schemas/NestStocks"
+          },
+          "flows": {
+            "$ref": "#/components/schemas/NestFlows"
+          },
+          "forager_fraction": {
+            "type": "number",
+            "title": "Forager Fraction"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "stocks",
+          "flows",
+          "forager_fraction"
+        ],
+        "title": "NestFrame"
+      },
+      "NestGeometry": {
+        "properties": {
+          "x": {
+            "type": "integer",
+            "title": "X"
+          },
+          "y": {
+            "type": "integer",
+            "title": "Y"
+          },
+          "radius": {
+            "type": "integer",
+            "title": "Radius"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "x",
+          "y",
+          "radius"
+        ],
+        "title": "NestGeometry"
+      },
+      "NestStocks": {
+        "properties": {
+          "food": {
+            "type": "number",
+            "title": "Food"
+          },
+          "eggs": {
+            "type": "number",
+            "title": "Eggs"
+          },
+          "larvae": {
+            "type": "number",
+            "title": "Larvae"
+          },
+          "workers": {
+            "type": "number",
+            "title": "Workers"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "food",
+          "eggs",
+          "larvae",
+          "workers"
+        ],
+        "title": "NestStocks"
+      },
+      "ParameterSpec": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Ruta grupo.nombre usada en PATCH /parameters"
+          },
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "int",
+              "float"
+            ],
+            "title": "Type"
+          },
+          "default": {
+            "type": "number",
+            "title": "Default"
+          },
+          "minimum": {
+            "type": "number",
+            "title": "Minimum"
+          },
+          "maximum": {
+            "type": "number",
+            "title": "Maximum"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "live_editable": {
+            "type": "boolean",
+            "title": "Live Editable",
+            "description": "Si es falso, solo se puede cambiar antes de iniciar o tras un reset"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key",
+          "group",
+          "name",
+          "description",
+          "type",
+          "default",
+          "minimum",
+          "maximum",
+          "unit",
+          "live_editable"
+        ],
+        "title": "ParameterSpec"
+      },
+      "ParameterUpdate": {
+        "properties": {
+          "values": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "minProperties": 1,
+            "title": "Values",
+            "description": "Mapa de clave grupo.nombre a nuevo valor"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "values"
+        ],
+        "title": "ParameterUpdate"
+      },
+      "PerturbationType": {
+        "type": "string",
+        "enum": [
+          "drought",
+          "flood",
+          "predator_wave"
+        ],
+        "title": "PerturbationType"
+      },
+      "PheromoneConfig": {
+        "properties": {
+          "food_evaporation": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Food Evaporation",
+            "description": "Evaporación del rastro hacia la comida",
+            "default": 0.02,
+            "live_editable": true,
+            "unit": "fracción/tick"
+          },
+          "home_evaporation": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Home Evaporation",
+            "description": "Evaporación del rastro hacia el nido",
+            "default": 0.01,
+            "live_editable": true,
+            "unit": "fracción/tick"
+          },
+          "alarm_evaporation": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Alarm Evaporation",
+            "description": "Evaporación de la feromona de alarma",
+            "default": 0.05,
+            "live_editable": true,
+            "unit": "fracción/tick"
+          },
+          "diffusion": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Diffusion",
+            "description": "Difusión de feromonas a celdas vecinas",
+            "default": 0.1,
+            "live_editable": true,
+            "unit": "fracción/tick"
+          },
+          "deposit_amount": {
+            "type": "number",
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Deposit Amount",
+            "description": "Feromona depositada por hormiga y tick",
+            "default": 1.0,
+            "live_editable": true,
+            "unit": "unidades"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PheromoneConfig"
+      },
+      "PredatorConfig": {
+        "properties": {
+          "initial_count": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 0.0,
+            "title": "Initial Count",
+            "description": "Depredadores iniciales",
+            "default": 2,
+            "live_editable": false,
+            "unit": "depredadores"
+          },
+          "max_predators": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Predators",
+            "description": "Máximo de depredadores simultáneos",
+            "default": 50,
+            "live_editable": false,
+            "unit": "depredadores"
+          },
+          "speed": {
+            "type": "number",
+            "maximum": 3.0,
+            "minimum": 0.1,
+            "title": "Speed",
+            "description": "Velocidad de los depredadores",
+            "default": 0.8,
+            "live_editable": true,
+            "unit": "celdas/tick"
+          },
+          "vision_radius": {
+            "type": "number",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Vision Radius",
+            "description": "Radio de visión",
+            "default": 8.0,
+            "live_editable": true,
+            "unit": "celdas"
+          },
+          "attack_probability": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Attack Probability",
+            "description": "Probabilidad de capturar una hormiga cercana",
+            "default": 0.3,
+            "live_editable": true,
+            "unit": "probabilidad"
+          },
+          "energy_gain_per_kill": {
+            "type": "number",
+            "maximum": 200.0,
+            "minimum": 0.0,
+            "title": "Energy Gain Per Kill",
+            "description": "Energía ganada por captura",
+            "default": 20.0,
+            "live_editable": true,
+            "unit": "energía"
+          },
+          "energy_decay": {
+            "type": "number",
+            "maximum": 5.0,
+            "minimum": 0.0,
+            "title": "Energy Decay",
+            "description": "Gasto de energía por tick",
+            "default": 0.2,
+            "live_editable": true,
+            "unit": "energía/tick"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PredatorConfig"
+      },
+      "PredatorPlacement": {
+        "properties": {
+          "x": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "X"
+          },
+          "y": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Y"
+          },
+          "count": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Count",
+            "default": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "PredatorPlacement"
+      },
+      "PredatorState": {
+        "type": "string",
+        "enum": [
+          "wandering",
+          "hunting",
+          "eating"
+        ],
+        "title": "PredatorState"
+      },
+      "PredatorsCreated": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Ids"
+          },
+          "applied_at_tick": {
+            "type": "integer",
+            "title": "Applied At Tick"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ids",
+          "applied_at_tick"
+        ],
+        "title": "PredatorsCreated"
+      },
+      "PredatorsFrame": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Ids"
+          },
+          "x": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "X"
+          },
+          "y": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Y"
+          },
+          "heading": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Heading"
+          },
+          "state": {
+            "items": {
+              "$ref": "#/components/schemas/PredatorState"
+            },
+            "type": "array",
+            "title": "State"
+          },
+          "energy": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Energy"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ids",
+          "x",
+          "y",
+          "heading",
+          "state",
+          "energy"
+        ],
+        "title": "PredatorsFrame"
+      },
+      "RecoveryInfo": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "population_before": {
+            "type": "number",
+            "title": "Population Before"
+          },
+          "min_population_during": {
+            "type": "number",
+            "title": "Min Population During"
+          },
+          "recovery_ticks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Ticks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "population_before",
+          "min_population_during",
+          "recovery_ticks"
+        ],
+        "title": "RecoveryInfo"
+      },
+      "Region": {
+        "properties": {
+          "x": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "X",
+            "description": "Columna de la esquina superior izquierda"
+          },
+          "y": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Y",
+            "description": "Fila de la esquina superior izquierda"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Width"
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Height"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "title": "Region"
+      },
+      "RunConfig": {
+        "properties": {
+          "dt": {
+            "type": "number",
+            "maximum": 10.0,
+            "minimum": 0.01,
+            "title": "Dt",
+            "description": "Paso de integración del modelo SD",
+            "default": 1.0,
+            "live_editable": false,
+            "unit": "tick"
+          },
+          "max_ticks": {
+            "type": "integer",
+            "maximum": 1000000.0,
+            "minimum": 100.0,
+            "title": "Max Ticks",
+            "description": "Duración máxima de la simulación",
+            "default": 20000,
+            "live_editable": true,
+            "unit": "ticks"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RunConfig"
+      },
+      "ScenarioInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "config": {
+            "$ref": "#/components/schemas/SimulationConfig"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/EventCreate"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "config",
+          "events"
+        ],
+        "title": "ScenarioInfo"
+      },
+      "SimulationConfig": {
+        "properties": {
+          "run": {
+            "$ref": "#/components/schemas/RunConfig"
+          },
+          "world": {
+            "$ref": "#/components/schemas/WorldConfig"
+          },
+          "pheromones": {
+            "$ref": "#/components/schemas/PheromoneConfig"
+          },
+          "ants": {
+            "$ref": "#/components/schemas/AntConfig"
+          },
+          "predators": {
+            "$ref": "#/components/schemas/PredatorConfig"
+          },
+          "nest": {
+            "$ref": "#/components/schemas/NestConfig"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SimulationConfig"
+      },
+      "SimulationCreate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "scenario_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Id"
+          },
+          "config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SimulationConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 4294967295.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SimulationCreate"
+      },
+      "SimulationInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SimulationStatus"
+          },
+          "finish_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FinishReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tick": {
+            "type": "integer",
+            "title": "Tick"
+          },
+          "sim_time": {
+            "type": "number",
+            "title": "Sim Time"
+          },
+          "speed": {
+            "type": "number",
+            "title": "Speed"
+          },
+          "seed": {
+            "type": "integer",
+            "title": "Seed"
+          },
+          "scenario_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "world_width": {
+            "type": "integer",
+            "title": "World Width"
+          },
+          "world_height": {
+            "type": "integer",
+            "title": "World Height"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "finish_reason",
+          "tick",
+          "sim_time",
+          "speed",
+          "seed",
+          "scenario_id",
+          "created_at",
+          "world_width",
+          "world_height"
+        ],
+        "title": "SimulationInfo"
+      },
+      "SimulationState": {
+        "properties": {
+          "info": {
+            "$ref": "#/components/schemas/SimulationInfo"
+          },
+          "config": {
+            "$ref": "#/components/schemas/SimulationConfig"
+          },
+          "world": {
+            "$ref": "#/components/schemas/WorldStatic"
+          },
+          "frame": {
+            "$ref": "#/components/schemas/FrameData"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/EventInfo"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "info",
+          "config",
+          "world",
+          "frame",
+          "events"
+        ],
+        "title": "SimulationState"
+      },
+      "SimulationStatus": {
+        "type": "string",
+        "enum": [
+          "created",
+          "running",
+          "paused",
+          "finished"
+        ],
+        "title": "SimulationStatus"
+      },
+      "SurvivalSummary": {
+        "properties": {
+          "ticks_elapsed": {
+            "type": "integer",
+            "title": "Ticks Elapsed"
+          },
+          "colony_alive": {
+            "type": "boolean",
+            "title": "Colony Alive"
+          },
+          "collapse_tick": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Collapse Tick"
+          },
+          "peak_population": {
+            "type": "number",
+            "title": "Peak Population"
+          },
+          "min_population": {
+            "type": "number",
+            "title": "Min Population"
+          },
+          "min_population_tick": {
+            "type": "integer",
+            "title": "Min Population Tick"
+          },
+          "mean_foraging_efficiency": {
+            "type": "number",
+            "title": "Mean Foraging Efficiency"
+          },
+          "total_food_delivered": {
+            "type": "number",
+            "title": "Total Food Delivered"
+          },
+          "deaths": {
+            "$ref": "#/components/schemas/DeathsByCause"
+          },
+          "recoveries": {
+            "items": {
+              "$ref": "#/components/schemas/RecoveryInfo"
+            },
+            "type": "array",
+            "title": "Recoveries"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ticks_elapsed",
+          "colony_alive",
+          "collapse_tick",
+          "peak_population",
+          "min_population",
+          "min_population_tick",
+          "mean_foraging_efficiency",
+          "total_food_delivered",
+          "deaths",
+          "recoveries"
+        ],
+        "title": "SurvivalSummary"
+      },
+      "WorldConfig": {
+        "properties": {
+          "width": {
+            "type": "integer",
+            "maximum": 400.0,
+            "minimum": 50.0,
+            "title": "Width",
+            "description": "Ancho del mundo",
+            "default": 200,
+            "live_editable": false,
+            "unit": "celdas"
+          },
+          "height": {
+            "type": "integer",
+            "maximum": 400.0,
+            "minimum": 50.0,
+            "title": "Height",
+            "description": "Alto del mundo",
+            "default": 200,
+            "live_editable": false,
+            "unit": "celdas"
+          },
+          "nest_x": {
+            "type": "integer",
+            "maximum": 399.0,
+            "minimum": 0.0,
+            "title": "Nest X",
+            "description": "Columna del centro del nido",
+            "default": 100,
+            "live_editable": false,
+            "unit": "celda"
+          },
+          "nest_y": {
+            "type": "integer",
+            "maximum": 399.0,
+            "minimum": 0.0,
+            "title": "Nest Y",
+            "description": "Fila del centro del nido",
+            "default": 100,
+            "live_editable": false,
+            "unit": "celda"
+          },
+          "nest_radius": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Nest Radius",
+            "description": "Radio del nido",
+            "default": 5,
+            "live_editable": false,
+            "unit": "celdas"
+          },
+          "food_sources": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 0.0,
+            "title": "Food Sources",
+            "description": "Fuentes de comida iniciales",
+            "default": 3,
+            "live_editable": false,
+            "unit": "fuentes"
+          },
+          "food_per_source": {
+            "type": "number",
+            "maximum": 5000.0,
+            "minimum": 10.0,
+            "title": "Food Per Source",
+            "description": "Comida en cada fuente inicial",
+            "default": 500.0,
+            "live_editable": false,
+            "unit": "unidades"
+          },
+          "food_source_radius": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Food Source Radius",
+            "description": "Radio de cada fuente de comida",
+            "default": 6,
+            "live_editable": false,
+            "unit": "celdas"
+          },
+          "food_regen_rate": {
+            "type": "number",
+            "maximum": 10.0,
+            "minimum": 0.0,
+            "title": "Food Regen Rate",
+            "description": "Regeneración de comida en las fuentes",
+            "default": 0.0,
+            "live_editable": true,
+            "unit": "unidades/tick"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "WorldConfig"
+      },
+      "WorldStatic": {
+        "properties": {
+          "width": {
+            "type": "integer",
+            "title": "Width"
+          },
+          "height": {
+            "type": "integer",
+            "title": "Height"
+          },
+          "nest": {
+            "$ref": "#/components/schemas/NestGeometry"
+          },
+          "obstacles": {
+            "$ref": "#/components/schemas/FieldData"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "width",
+          "height",
+          "nest",
+          "obstacles"
+        ],
+        "title": "WorldStatic"
+      },
+      "WsSchemaResponse": {
+        "properties": {
+          "server": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Server"
+          },
+          "client": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Client"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "server",
+          "client"
+        ],
+        "title": "WsSchemaResponse"
+      },
+      "ClientMessage": {
+        "discriminator": {
+          "mapping": {
+            "ping": "#/components/schemas/PingMessage",
+            "subscribe": "#/components/schemas/SubscribeMessage"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/SubscribeMessage"
+          },
+          {
+            "$ref": "#/components/schemas/PingMessage"
+          }
+        ],
+        "title": "ClientMessage"
+      },
+      "ErrorMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "error",
+            "title": "Type",
+            "type": "string"
+          },
+          "tick": {
+            "title": "Tick",
+            "type": "integer"
+          },
+          "sim_time": {
+            "title": "Sim Time",
+            "type": "number"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "required": [
+          "type",
+          "tick",
+          "sim_time",
+          "payload"
+        ],
+        "title": "ErrorMessage",
+        "type": "object"
+      },
+      "FieldMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "field",
+            "title": "Type",
+            "type": "string"
+          },
+          "tick": {
+            "title": "Tick",
+            "type": "integer"
+          },
+          "sim_time": {
+            "title": "Sim Time",
+            "type": "number"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/FieldData"
+          }
+        },
+        "required": [
+          "type",
+          "tick",
+          "sim_time",
+          "payload"
+        ],
+        "title": "FieldMessage",
+        "type": "object"
+      },
+      "FrameMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "frame",
+            "title": "Type",
+            "type": "string"
+          },
+          "tick": {
+            "title": "Tick",
+            "type": "integer"
+          },
+          "sim_time": {
+            "title": "Sim Time",
+            "type": "number"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/FrameData"
+          }
+        },
+        "required": [
+          "type",
+          "tick",
+          "sim_time",
+          "payload"
+        ],
+        "title": "FrameMessage",
+        "type": "object"
+      },
+      "InitMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "init",
+            "title": "Type",
+            "type": "string"
+          },
+          "tick": {
+            "title": "Tick",
+            "type": "integer"
+          },
+          "sim_time": {
+            "title": "Sim Time",
+            "type": "number"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/InitPayload"
+          }
+        },
+        "required": [
+          "type",
+          "tick",
+          "sim_time",
+          "payload"
+        ],
+        "title": "InitMessage",
+        "type": "object"
+      },
+      "InitPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "info": {
+            "$ref": "#/components/schemas/SimulationInfo"
+          },
+          "config": {
+            "$ref": "#/components/schemas/SimulationConfig"
+          },
+          "world": {
+            "$ref": "#/components/schemas/WorldStatic"
+          },
+          "subscription": {
+            "$ref": "#/components/schemas/Subscription"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/EventInfo"
+            },
+            "title": "Events",
+            "type": "array"
+          }
+        },
+        "required": [
+          "info",
+          "config",
+          "world",
+          "subscription",
+          "events"
+        ],
+        "title": "InitPayload",
+        "type": "object"
+      },
+      "Notice": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/NoticeKind"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "event_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Event Id"
+          },
+          "command_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Command Id"
+          }
+        },
+        "required": [
+          "kind",
+          "message"
+        ],
+        "title": "Notice",
+        "type": "object"
+      },
+      "NoticeKind": {
+        "enum": [
+          "event_scheduled",
+          "event_started",
+          "event_ended",
+          "event_cancelled",
+          "command_applied",
+          "parameters_updated",
+          "colony_collapsed",
+          "simulation_finished",
+          "simulation_reset"
+        ],
+        "title": "NoticeKind",
+        "type": "string"
+      },
+      "NoticeMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "event",
+            "title": "Type",
+            "type": "string"
+          },
+          "tick": {
+            "title": "Tick",
+            "type": "integer"
+          },
+          "sim_time": {
+            "title": "Sim Time",
+            "type": "number"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/Notice"
+          }
+        },
+        "required": [
+          "type",
+          "tick",
+          "sim_time",
+          "payload"
+        ],
+        "title": "NoticeMessage",
+        "type": "object"
+      },
+      "PingMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "ping",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "PingMessage",
+        "type": "object"
+      },
+      "PongMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "pong",
+            "title": "Type",
+            "type": "string"
+          },
+          "tick": {
+            "title": "Tick",
+            "type": "integer"
+          },
+          "sim_time": {
+            "title": "Sim Time",
+            "type": "number"
+          }
+        },
+        "required": [
+          "type",
+          "tick",
+          "sim_time"
+        ],
+        "title": "PongMessage",
+        "type": "object"
+      },
+      "ServerMessage": {
+        "discriminator": {
+          "mapping": {
+            "error": "#/components/schemas/ErrorMessage",
+            "event": "#/components/schemas/NoticeMessage",
+            "field": "#/components/schemas/FieldMessage",
+            "frame": "#/components/schemas/FrameMessage",
+            "init": "#/components/schemas/InitMessage",
+            "pong": "#/components/schemas/PongMessage",
+            "status": "#/components/schemas/StatusMessage"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/InitMessage"
+          },
+          {
+            "$ref": "#/components/schemas/FrameMessage"
+          },
+          {
+            "$ref": "#/components/schemas/FieldMessage"
+          },
+          {
+            "$ref": "#/components/schemas/NoticeMessage"
+          },
+          {
+            "$ref": "#/components/schemas/StatusMessage"
+          },
+          {
+            "$ref": "#/components/schemas/ErrorMessage"
+          },
+          {
+            "$ref": "#/components/schemas/PongMessage"
+          }
+        ],
+        "title": "ServerMessage"
+      },
+      "StatusMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "status",
+            "title": "Type",
+            "type": "string"
+          },
+          "tick": {
+            "title": "Tick",
+            "type": "integer"
+          },
+          "sim_time": {
+            "title": "Sim Time",
+            "type": "number"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/StatusPayload"
+          }
+        },
+        "required": [
+          "type",
+          "tick",
+          "sim_time",
+          "payload"
+        ],
+        "title": "StatusMessage",
+        "type": "object"
+      },
+      "StatusPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/SimulationStatus"
+          },
+          "speed": {
+            "title": "Speed",
+            "type": "number"
+          },
+          "finish_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FinishReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "speed",
+          "finish_reason"
+        ],
+        "title": "StatusPayload",
+        "type": "object"
+      },
+      "SubscribeMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "subscribe",
+            "title": "Type",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/Subscription"
+          }
+        },
+        "required": [
+          "type",
+          "payload"
+        ],
+        "title": "SubscribeMessage",
+        "type": "object"
+      },
+      "Subscription": {
+        "additionalProperties": false,
+        "properties": {
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/FieldLayer"
+            },
+            "title": "Layers",
+            "type": "array"
+          },
+          "frame_every": {
+            "default": 1,
+            "description": "Enviar un frame cada N ticks",
+            "maximum": 60,
+            "minimum": 1,
+            "title": "Frame Every",
+            "type": "integer"
+          },
+          "field_every": {
+            "default": 10,
+            "description": "Enviar las capas suscritas cada N ticks",
+            "maximum": 600,
+            "minimum": 1,
+            "title": "Field Every",
+            "type": "integer"
+          },
+          "field_downsample": {
+            "default": 2,
+            "maximum": 8,
+            "minimum": 1,
+            "title": "Field Downsample",
+            "type": "integer"
+          }
+        },
+        "title": "Subscription",
+        "type": "object"
+      }
+    }
+  }
+}
