@@ -1,6 +1,7 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { useEffect, useState } from 'react'
 import { Drawer } from './components/Drawer'
+import { EventTimeline } from './components/events/EventTimeline'
 import { StartScreen } from './components/StartScreen'
 import { Toasts } from './components/Toasts'
 import { ToolPalette } from './components/ToolPalette'
@@ -28,6 +29,7 @@ function SimulationView() {
       <TopBar />
       <ToolPalette scene={scene} />
       <Drawer />
+      <EventTimeline />
     </main>
   )
 }

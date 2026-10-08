@@ -1,10 +1,11 @@
 import * as Tabs from '@radix-ui/react-tabs'
-import { ChartLine, Network, X } from 'lucide-react'
+import { ChartLine, Network, SlidersHorizontal, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { useUi, type DrawerTab } from '../sim/ui'
 import { ChartsPanel } from './charts/ChartsPanel'
 import { NestDiagram } from './nest/NestDiagram'
+import { ParametersPanel } from './parameters/ParametersPanel'
 import { IconButton } from './ui/IconButton'
 
 interface TabSpec {
@@ -17,6 +18,7 @@ interface TabSpec {
 const TABS: TabSpec[] = [
   { id: 'nest', label: 'Nido', icon: <Network size={20} />, content: () => <NestDiagram /> },
   { id: 'charts', label: 'Gráficas', icon: <ChartLine size={20} />, content: () => <ChartsPanel /> },
+  { id: 'parameters', label: 'Parámetros', icon: <SlidersHorizontal size={20} />, content: () => <ParametersPanel /> },
 ]
 
 export function Drawer() {

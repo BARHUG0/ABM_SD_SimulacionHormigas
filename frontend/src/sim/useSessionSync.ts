@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import type { FieldLayer } from '../api/types'
+import { noticeToast } from './perturbations'
 import { updateSubscription } from './session'
+import { useSimulation } from './store'
 import { useUi, type OverlayLayer } from './ui'
 
 const ALWAYS_SUBSCRIBED: FieldLayer[] = ['food']
@@ -17,4 +19,14 @@ export function useSessionSync(): void {
   useEffect(() => {
     updateSubscription({ layers: subscribedLayers(visibleLayers) })
   }, [visibleLayers])
+
+  useEffect(
+    () =>
+      useSimulation.subscribe((state, previous) => {
+        if (!state.lastNotice || state.lastNotice === previous.lastNotice) return
+        const toast = noticeToast(state.lastNotice)
+        if (toast) useUi.getState().pushToast(toast.text, toast.tone)
+      }),
+    [],
+  )
 }

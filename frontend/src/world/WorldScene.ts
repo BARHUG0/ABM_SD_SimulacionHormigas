@@ -4,6 +4,7 @@ import { useUi } from '../sim/ui'
 import { AntLayer } from './AntLayer'
 import { Camera, type Point } from './camera'
 import { FieldLayers } from './FieldLayers'
+import { EventLayer } from './EventLayer'
 import { BACKGROUND, NEST_FILL, NEST_RING } from './palette'
 import { PredatorLayer } from './PredatorLayer'
 import { antTexture, predatorTexture, terrainTexture } from './textures'
@@ -30,6 +31,7 @@ export class WorldScene {
   private terrainTexture: Texture | null = null
   private readonly nest = new Graphics()
   private readonly fields = new FieldLayers()
+  private readonly eventLayer = new EventLayer()
   private readonly ants: AntLayer
   private readonly predators: PredatorLayer
   private readonly highlight = new Graphics()
@@ -72,6 +74,7 @@ export class WorldScene {
       this.terrain,
       this.fields.overlays,
       this.fields.obstacles,
+      this.eventLayer.container,
       this.nest,
       this.effects,
       this.ants.container,
@@ -131,6 +134,8 @@ export class WorldScene {
     const ui = useUi.getState()
     if (simulation.world !== this.worldView) this.buildWorld(simulation.world)
     this.fields.update(simulation.fields, ui.visibleLayers)
+    this.eventLayer.sync(simulation.events, simulation.world)
+    this.eventLayer.animate(now)
     if (simulation.frame !== this.frame) {
       this.frame = simulation.frame
       this.ants.sync(simulation.frame, simulation.previousFrame)
