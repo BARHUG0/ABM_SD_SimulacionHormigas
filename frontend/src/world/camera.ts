@@ -5,7 +5,14 @@ export interface Point {
   y: number
 }
 
-const FIT_MARGIN = 0.94
+export interface Insets {
+  top: number
+  right: number
+  bottom: number
+  left: number
+}
+
+const FIT_MARGIN = 0.96
 
 export class Camera {
   scale = 1
@@ -19,13 +26,15 @@ export class Camera {
     this.target = target
   }
 
-  fit(viewWidth: number, viewHeight: number, worldWidth: number, worldHeight: number): void {
-    const scale = Math.min(viewWidth / worldWidth, viewHeight / worldHeight) * FIT_MARGIN
+  fit(view: Insets & { width: number; height: number }, worldWidth: number, worldHeight: number): void {
+    const width = Math.max(view.width - view.left - view.right, 50)
+    const height = Math.max(view.height - view.top - view.bottom, 50)
+    const scale = Math.min(width / worldWidth, height / worldHeight) * FIT_MARGIN
     this.minScale = scale * 0.5
     this.maxScale = scale * 14
     this.scale = scale
-    this.x = (viewWidth - worldWidth * scale) / 2
-    this.y = (viewHeight - worldHeight * scale) / 2
+    this.x = view.left + (width - worldWidth * scale) / 2
+    this.y = view.top + (height - worldHeight * scale) / 2
     this.apply()
   }
 

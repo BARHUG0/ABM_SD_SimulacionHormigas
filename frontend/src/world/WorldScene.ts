@@ -16,6 +16,7 @@ export interface PointerHandler {
 }
 
 const HOVER_RADIUS_PX = 10
+const VIEW_INSETS = { top: 88, right: 16, bottom: 92, left: 80 }
 
 export class WorldScene {
   readonly app: Application
@@ -98,7 +99,8 @@ export class WorldScene {
 
   fitView(): void {
     if (!this.worldView) return
-    this.camera.fit(this.host.clientWidth, this.host.clientHeight, this.worldView.width, this.worldView.height)
+    const view = { width: this.host.clientWidth, height: this.host.clientHeight, ...VIEW_INSETS }
+    this.camera.fit(view, this.worldView.width, this.worldView.height)
   }
 
   get worldSize(): WorldView | null {
