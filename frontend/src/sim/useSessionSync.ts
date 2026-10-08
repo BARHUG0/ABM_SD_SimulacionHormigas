@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 import type { FieldLayer } from '../api/types'
+import { releaseSimulation } from './actions'
+import { reachedMilestones } from './milestones'
 import { noticeToast } from './perturbations'
 import { updateSubscription } from './session'
 import { useSimulation } from './store'
@@ -29,4 +31,31 @@ export function useSessionSync(): void {
       }),
     [],
   )
+
+  useEffect(() => {
+    const reached = new Set<string>()
+    let primed = false
+    return useSimulation.subscribe((state, previous) => {
+      if (state.tick < previous.tick) {
+        reached.clear()
+        primed = false
+      }
+      if (!state.frame || state.frame === previous.frame) return
+      const found = reachedMilestones(state.frame, reached)
+      found.forEach((milestone) => reached.add(milestone.id))
+      if (primed) found.forEach((milestone) => useUi.getState().pushToast(milestone.text, 'success'))
+      primed = true
+    })
+  }, [])
+
+  useEffect(() => {
+    const stopWatching = useSimulation.subscribe((state, previous) => {
+      if (state.status === 'finished' && previous.status !== 'finished') useUi.getState().setSummaryOpen(true)
+    })
+    window.addEventListener('pagehide', releaseSimulation)
+    return () => {
+      stopWatching()
+      window.removeEventListener('pagehide', releaseSimulation)
+    }
+  }, [])
 }

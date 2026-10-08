@@ -47,7 +47,7 @@ export function ToolPalette({ scene }: { scene: WorldScene | null }) {
         <IconButton label="Pincel y capas" active={optionsOpen} onClick={() => setOptionsOpen(!optionsOpen)}>
           <Layers size={18} />
         </IconButton>
-        <IconButton label="Encuadrar el mundo" onClick={() => scene?.fitView()}>
+        <IconButton label="Encuadrar el mundo" shortcut="F" onClick={() => scene?.fitView()}>
           <Maximize2 size={18} />
         </IconButton>
       </div>

@@ -1,8 +1,9 @@
-import { Bug, Egg, LogOut, Pause, Play, RotateCcw, StepForward, Wheat } from 'lucide-react'
+import { Bug, Egg, HeartPulse, LogOut, Pause, Play, RotateCcw, StepForward, Wheat } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useScenarios } from '../api/queries'
 import { control, leaveSimulation, step, togglePlay } from '../sim/actions'
 import { useSimulation } from '../sim/store'
+import { useUi } from '../sim/ui'
 import { formatCount } from './format'
 import { IconButton } from './ui/IconButton'
 
@@ -49,7 +50,7 @@ export function TopBar() {
 
       <div className="flex items-center gap-1 rounded-xl bg-soil-800/80 p-1">
         <IconButton
-          label={running ? 'Pausar' : 'Reanudar'}
+          label={running ? 'Pausar' : status === 'created' ? 'Iniciar' : 'Reanudar'}
           shortcut="Espacio"
           onClick={() => void togglePlay()}
           active={running}
@@ -92,6 +93,9 @@ export function TopBar() {
         <Counter icon={<Bug size={20} />} label="Obreras" value={formatCount(workers)} tone="text-sand-200" />
         <Counter icon={<Wheat size={20} />} label="Comida" value={formatCount(food)} tone="text-amber-500" />
         <Counter icon={<Egg size={20} />} label="Larvas" value={formatCount(larvae)} tone="text-leaf-400" />
+        <IconButton label="Resiliencia de la colonia" onClick={() => useUi.getState().setSummaryOpen(true)}>
+          <HeartPulse size={20} />
+        </IconButton>
         <IconButton label="Volver al inicio" onClick={leaveSimulation}>
           <LogOut size={20} />
         </IconButton>

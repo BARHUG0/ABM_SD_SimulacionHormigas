@@ -26,3 +26,14 @@ El servidor de Vite redirige `/api` y el WebSocket al backend, así que no hace 
 - `src/sim`: store de Zustand, decodificador de capas e historial en vivo.
 - `src/world`: escena de PixiJS que dibuja el mundo.
 - `src/components`: paneles y controles de la interfaz.
+
+## Atajos de teclado
+
+| Tecla | Acción |
+|---|---|
+| Espacio | Pausar o reanudar |
+| → | Avanzar un tick en pausa |
+| 1 a 4 | Obstáculo, comida, depredador, borrar |
+| Esc | Cerrar el resumen, volver a mover la cámara o cerrar el cajón |
+| N, G, P | Abrir Nido, Gráficas o Parámetros |
+| F | Encuadrar el mundo |

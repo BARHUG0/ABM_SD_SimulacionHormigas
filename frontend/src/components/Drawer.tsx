@@ -11,14 +11,15 @@ import { IconButton } from './ui/IconButton'
 interface TabSpec {
   id: DrawerTab
   label: string
+  shortcut: string
   icon: ReactNode
   content: () => ReactNode
 }
 
 const TABS: TabSpec[] = [
-  { id: 'nest', label: 'Nido', icon: <Network size={20} />, content: () => <NestDiagram /> },
-  { id: 'charts', label: 'Gráficas', icon: <ChartLine size={20} />, content: () => <ChartsPanel /> },
-  { id: 'parameters', label: 'Parámetros', icon: <SlidersHorizontal size={20} />, content: () => <ParametersPanel /> },
+  { id: 'nest', label: 'Nido', shortcut: 'N', icon: <Network size={20} />, content: () => <NestDiagram /> },
+  { id: 'charts', label: 'Gráficas', shortcut: 'G', icon: <ChartLine size={20} />, content: () => <ChartsPanel /> },
+  { id: 'parameters', label: 'Parámetros', shortcut: 'P', icon: <SlidersHorizontal size={20} />, content: () => <ParametersPanel /> },
 ]
 
 export function Drawer() {
@@ -80,6 +81,7 @@ export function Drawer() {
           <IconButton
             key={spec.id}
             label={spec.label}
+            shortcut={spec.shortcut}
             active={open && tab === spec.id}
             onClick={() => select(spec.id)}
           >

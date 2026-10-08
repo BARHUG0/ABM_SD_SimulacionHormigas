@@ -1,4 +1,4 @@
-import { ApiError } from '../api/client'
+import { API_PREFIX, ApiError } from '../api/client'
 import { endpoints } from '../api/endpoints'
 import type { ControlRequest } from '../api/types'
 import { closeSession, openSession } from './session'
@@ -40,6 +40,12 @@ export async function startScenario(scenarioId: string) {
   if (!info) return
   openSession(info.id)
   await control({ action: 'start' })
+}
+
+export function releaseSimulation() {
+  const simulationId = currentSimulationId()
+  if (!simulationId) return
+  void fetch(`${API_PREFIX}/simulations/${simulationId}`, { method: 'DELETE', keepalive: true }).catch(() => undefined)
 }
 
 export function leaveSimulation() {

@@ -31,6 +31,8 @@ interface UiStore {
   drawerOpen: boolean
   drawerTab: DrawerTab
   setDrawer: (open: boolean, tab?: DrawerTab) => void
+  summaryOpen: boolean
+  setSummaryOpen: (open: boolean) => void
   visibleLayers: Record<OverlayLayer, boolean>
   hoveredAnt: HoveredAnt | null
   tool: Tool
@@ -51,6 +53,8 @@ export const useUi = create<UiStore>()((set) => ({
   drawerOpen: false,
   drawerTab: 'nest',
   setDrawer: (drawerOpen, tab) => set((state) => ({ drawerOpen, drawerTab: tab ?? state.drawerTab })),
+  summaryOpen: false,
+  setSummaryOpen: (summaryOpen) => set({ summaryOpen }),
   visibleLayers: { pheromone_food: true, pheromone_home: true, pheromone_alarm: false, food: true },
   hoveredAnt: null,
   tool: 'pan',
