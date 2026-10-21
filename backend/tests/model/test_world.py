@@ -443,3 +443,98 @@ def test_water_stays_in_range_and_washes_pheromones():
     world.layers[FieldLayer.PHEROMONE_FOOD][55, 55] = 100.0
     world.update_pheromones(config)
     assert world.layers[FieldLayer.PHEROMONE_FOOD][55, 55] < 100.0
+
+
+def test_paint_obstacles_adds_and_erases_cells():
+    world = create_world()
+    assert world.paint_obstacles([(30, 30)], 0, True) == 1
+    assert world.layers[FieldLayer.OBSTACLES][30, 30] == 1.0
+    assert world.paint_obstacles([(30, 30)], 0, True) == 0
+    assert world.paint_obstacles([(30, 30)], 0, False) == 1
+    assert world.layers[FieldLayer.OBSTACLES][30, 30] == 0.0
+
+
+def test_paint_obstacles_preserves_nest():
+    world = create_world()
+    changed = world.paint_obstacles([(world.nest_x, world.nest_y)], 0, True)
+    assert changed == 0
+    assert world.layers[FieldLayer.OBSTACLES][world.nest_y, world.nest_x] == 0
+
+
+def test_obstacle_clears_environmental_layers():
+    world = create_world()
+    y, x = 40, 40
+    for layer in (
+        FieldLayer.FOOD,
+        FieldLayer.PHEROMONE_FOOD,
+        FieldLayer.PHEROMONE_HOME,
+        FieldLayer.PHEROMONE_ALARM,
+        FieldLayer.WATER,
+    ):
+        world.layers[layer][y, x] = 4.0 if layer != FieldLayer.WATER else 0.8
+    world.paint_obstacles([(x, y)], 0, True)
+    for layer in (
+        FieldLayer.FOOD,
+        FieldLayer.PHEROMONE_FOOD,
+        FieldLayer.PHEROMONE_HOME,
+        FieldLayer.PHEROMONE_ALARM,
+        FieldLayer.WATER,
+    ):
+        assert world.layers[layer][y, x] == 0
+
+
+def test_paint_obstacles_removes_covered_food_source():
+    config = SimulationConfig()
+    config.world.food_sources = 0
+    world = World(config, np.random.default_rng(42))
+    world.add_food(35, 35, 2, 30.0)
+    assert len(world.food_sources) == 1
+    world.paint_obstacles([(35, 35)], 0, True)
+    assert len(world.food_sources) == 0
+    for _ in range(20):
+        world.update(config)
+    assert world.food_in_world == 0
+
+
+def test_erase_food_removes_source_and_prevents_regrowth():
+    config = SimulationConfig()
+    config.world.food_sources = 0
+    world = World(config, np.random.default_rng(42))
+    world.add_food(35, 35, 2, 30.0)
+    changed = world.erase_food(35, 35, 3)
+    assert changed > 0
+    assert not world.food_sources
+    for _ in range(20):
+        world.update(config)
+    assert world.food_in_world == 0
+
+
+def test_erase_food_preserves_sources_outside_circle():
+    config = SimulationConfig()
+    config.world.food_sources = 0
+    world = World(config, np.random.default_rng(42))
+    world.add_food(30, 30, 1, 10.0)
+    world.add_food(60, 60, 1, 10.0)
+    world.erase_food(30, 30, 2)
+    assert len(world.food_sources) == 1
+    assert (world.food_sources[0].x, world.food_sources[0].y) == (60, 60)
+    assert world.layers[FieldLayer.FOOD][60, 60] > 0
+
+
+def test_reset_obstacles_can_be_reused():
+    config = SimulationConfig()
+    config.world.food_sources = 0
+    first = World(config, np.random.default_rng(42))
+    first.paint_obstacles([(35, 35)], 2, True)
+    kept = first.layers[FieldLayer.OBSTACLES].copy()
+    second = World(config, np.random.default_rng(42), kept)
+    np.testing.assert_array_equal(second.layers[FieldLayer.OBSTACLES], kept)
+
+
+def test_food_cannot_be_added_on_blocked_cell():
+    config = SimulationConfig()
+    config.world.food_sources = 0
+    world = World(config, np.random.default_rng(42))
+    world.paint_obstacles([(35, 35)], 0, True)
+    assert world.add_food(35, 35, 0, 10.0) == 0
+    assert world.layers[FieldLayer.FOOD][35, 35] == 0

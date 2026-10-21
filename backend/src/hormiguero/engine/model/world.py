@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from hormiguero.engine.fields import disk_mask
+from hormiguero.engine.fields import disk_mask, stroke_mask
 from hormiguero.schemas.config import SimulationConfig
 from hormiguero.schemas.events import EventInfo, PerturbationType
 from hormiguero.schemas.state import FieldLayer
@@ -207,6 +207,75 @@ class World:
             FoodSource(int(x), int(y), int(radius), capacity_per_cell)
         )
         return count
+
+    def paint_obstacles(
+        self, cells: list[tuple[int, int]], radius: int, add: bool
+    ) -> int:
+        if not cells or radius < 0:
+            return 0
+        mask = stroke_mask(self.shape, cells, radius)
+        mask &= ~disk_mask(
+            self.shape, self.nest_x, self.nest_y, self.nest_radius + 1
+        )
+        obstacles = self.layers[FieldLayer.OBSTACLES]
+        target = 1.0 if add else 0.0
+        changed_mask = mask & (obstacles != target)
+        changed = int(np.count_nonzero(changed_mask))
+        if changed == 0:
+            return 0
+        obstacles[changed_mask] = target
+        if add:
+            for layer in (
+                FieldLayer.FOOD,
+                FieldLayer.PHEROMONE_FOOD,
+                FieldLayer.PHEROMONE_HOME,
+                FieldLayer.PHEROMONE_ALARM,
+                FieldLayer.WATER,
+            ):
+                self.layers[layer][changed_mask] = 0.0
+            self.food_capacity[changed_mask] = 0.0
+            self.water_target[changed_mask] = 0.0
+            self.food_sources = [
+                source for source in self.food_sources
+                if not (
+                    0 <= source.x < self.shape[1]
+                    and 0 <= source.y < self.shape[0]
+                    and changed_mask[source.y, source.x]
+                )
+            ]
+            self._rebuild_food_capacity()
+        else:
+            self._rebuild_food_capacity()
+            self._recalculate_water_target()
+        return changed
+
+    def erase_food(self, x: int, y: int, radius: int) -> int:
+        if radius < 0:
+            return 0
+        mask = disk_mask(self.shape, x, y, radius)
+        food = self.layers[FieldLayer.FOOD]
+        changed = int(np.count_nonzero(mask & (food > 0)))
+        food[mask] = 0.0
+        self.food_sources = [
+            source for source in self.food_sources
+            if (source.x - x) ** 2 + (source.y - y) ** 2 > radius**2
+        ]
+        self._rebuild_food_capacity()
+        return changed
+
+    def _rebuild_food_capacity(self) -> None:
+        self.food_capacity.fill(0.0)
+        free = self.layers[FieldLayer.OBSTACLES] == 0
+        for source in self.food_sources:
+            mask = disk_mask(
+                self.shape, source.x, source.y, source.radius
+            ) & free
+            self.food_capacity[mask] += source.capacity_per_cell
+        np.minimum(
+            self.layers[FieldLayer.FOOD],
+            self.food_capacity,
+            out=self.layers[FieldLayer.FOOD],
+        )
 
     @property
     def food_in_world(self) -> float:
