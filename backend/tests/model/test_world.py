@@ -339,3 +339,107 @@ def test_drought_increases_pheromone_evaporation():
     actual = float(world.layers[FieldLayer.PHEROMONE_FOOD][50, 50])
     assert actual < 90.0
     assert actual > 70.0
+
+
+def make_flood(event_id, intensity, region=None):
+    return EventInfo(
+        id=event_id,
+        type=PerturbationType.FLOOD,
+        intensity=intensity,
+        duration=1000,
+        region=region,
+        start_tick=0,
+        end_tick=1000,
+        predator_count=None,
+        status=EventStatus.ACTIVE,
+    )
+
+
+def test_flood_rises_gradually_and_spreads():
+    config = SimulationConfig()
+    world = World(config, np.random.default_rng(42))
+    world.start_event(make_flood("f1", 0.8, Region(x=50, y=50, width=5, height=5)))
+    assert world.layers[FieldLayer.WATER].max() == 0.0
+    world.update(config)
+    water = world.layers[FieldLayer.WATER]
+    assert 0.0 < water[52, 52] < 0.8
+    assert water[52, 49] == 0.0
+    for _ in range(40):
+        world.update(config)
+    assert water[52, 49] > 0.0
+    assert water[52, 47] == 0.0
+
+
+def test_overlapping_floods_use_stronger_intensity():
+    config = SimulationConfig()
+    world = World(config, np.random.default_rng(42))
+    first = make_flood("f1", 0.3, Region(x=10, y=10, width=20, height=20))
+    second = make_flood("f2", 0.8, Region(x=20, y=20, width=20, height=20))
+    world.start_event(first)
+    world.start_event(second)
+    assert np.isclose(world.water_target[15, 15], 0.3)
+    assert np.isclose(world.water_target[25, 25], 0.8)
+    assert np.isclose(world.water_target[35, 35], 0.8)
+    world.end_event(second)
+    assert np.isclose(world.water_target[25, 25], 0.3)
+    assert np.isclose(world.water_target[35, 35], 0.0)
+
+
+def test_flood_cannot_cross_wall():
+    config = SimulationConfig()
+    obstacles = np.zeros((200, 200), dtype=np.float32)
+    obstacles[:, 100] = 1.0
+    world = World(config, np.random.default_rng(42), obstacles)
+    world.start_event(make_flood("f1", 1.0, Region(x=90, y=80, width=10, height=40)))
+    for _ in range(120):
+        world.update(config)
+    water = world.layers[FieldLayer.WATER]
+    assert water[:, 101:].max() == 0.0
+    assert water[:, 100].max() == 0.0
+    assert water[:, :100].max() > 0.0
+
+
+def test_obstacle_ring_protects_nest():
+    config = SimulationConfig()
+    obstacles = np.zeros((200, 200), dtype=np.float32)
+    obstacles[89:112, 89] = 1.0
+    obstacles[89:112, 111] = 1.0
+    obstacles[89, 89:112] = 1.0
+    obstacles[111, 89:112] = 1.0
+    world = World(config, np.random.default_rng(42), obstacles)
+    world.start_event(make_flood("f1", 1.0, Region(x=75, y=75, width=14, height=50)))
+    for _ in range(200):
+        world.update(config)
+    water = world.layers[FieldLayer.WATER]
+    assert water[90:111, 90:111].max() == 0.0
+    assert water[95, 88] > 0.0
+
+
+def test_flood_recedes_after_event_ends():
+    config = SimulationConfig()
+    world = World(config, np.random.default_rng(42))
+    event = make_flood("f1", 0.8, Region(x=50, y=50, width=10, height=10))
+    world.start_event(event)
+    for _ in range(100):
+        world.update(config)
+    assert world.layers[FieldLayer.WATER].max() > 0.0
+    world.end_event(event)
+    for _ in range(150):
+        world.update(config)
+    assert world.layers[FieldLayer.WATER].max() == 0.0
+
+
+def test_water_stays_in_range_and_washes_pheromones():
+    config = SimulationConfig()
+    config.pheromones.diffusion = 0.0
+    config.pheromones.food_evaporation = 0.0
+    world = World(config, np.random.default_rng(42))
+    world.start_event(make_flood("f1", 1.0, Region(x=50, y=50, width=10, height=10)))
+    for _ in range(100):
+        world.update(config)
+    water = world.layers[FieldLayer.WATER]
+    assert water.dtype == np.float32
+    assert 0.0 <= water.min() <= water.max() <= 1.0
+    world.layers[FieldLayer.PHEROMONE_FOOD][55, 55] = 100.0
+    world.update_pheromones(config)
+    assert world.layers[FieldLayer.PHEROMONE_FOOD][55, 55] < 100.0

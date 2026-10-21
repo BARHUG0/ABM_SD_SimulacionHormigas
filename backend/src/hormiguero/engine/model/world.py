@@ -47,6 +47,7 @@ class World:
 
         self.active_events: dict[str, EventInfo] = {}
         self.moisture_target = np.ones(self.shape, dtype=np.float32)
+        self.water_target = np.zeros(self.shape, dtype=np.float32)
         self.food_sources: list[FoodSource] = []
         self.food_capacity = np.zeros(self.shape, dtype=np.float32)
         self._place_initial_food(config)
@@ -292,20 +293,61 @@ class World:
                 self.moisture_target[mask], 1.0 - event.intensity
             )
 
+    def _recalculate_water_target(self) -> None:
+        self.water_target.fill(0.0)
+        for event in self.active_events.values():
+            if event.type is not PerturbationType.FLOOD:
+                continue
+            mask = self._event_mask(event)
+            self.water_target[mask] = np.maximum(
+                self.water_target[mask], event.intensity
+            )
+        self.water_target[self.layers[FieldLayer.OBSTACLES] > 0] = 0.0
+
     def start_event(self, event: EventInfo) -> None:
+        previous = self.active_events.get(event.id)
         self.active_events[event.id] = event
-        if event.type is PerturbationType.DROUGHT:
+        if event.type is PerturbationType.DROUGHT or (
+            previous is not None and previous.type is PerturbationType.DROUGHT
+        ):
             self._recalculate_moisture_target()
+        if event.type is PerturbationType.FLOOD or (
+            previous is not None and previous.type is PerturbationType.FLOOD
+        ):
+            self._recalculate_water_target()
 
     def end_event(self, event: EventInfo) -> None:
         removed = self.active_events.pop(event.id, None)
         if removed is not None and removed.type is PerturbationType.DROUGHT:
             self._recalculate_moisture_target()
+        if removed is not None and removed.type is PerturbationType.FLOOD:
+            self._recalculate_water_target()
+
+    def _update_water(self) -> None:
+        water = self.layers[FieldLayer.WATER]
+        obstacles = self.layers[FieldLayer.OBSTACLES] > 0
+        active = (self.water_target > 0) & ~obstacles
+        water[active] += 0.05 * (self.water_target[active] - water[active])
+        water[obstacles] = 0.0
+
+        padded = np.pad(water, 1, mode="edge")
+        blocked = np.pad(obstacles, 1, mode="edge")
+        neighbors = (
+            np.where(blocked[:-2, 1:-1], water, padded[:-2, 1:-1])
+            + np.where(blocked[2:, 1:-1], water, padded[2:, 1:-1])
+            + np.where(blocked[1:-1, :-2], water, padded[1:-1, :-2])
+            + np.where(blocked[1:-1, 2:], water, padded[1:-1, 2:])
+        ) * 0.25
+        water[:] = 0.75 * water + 0.25 * neighbors
+        water[~active] = np.maximum(0.0, water[~active] - 0.01)
+        water[obstacles] = 0.0
+        np.clip(water, 0.0, 1.0, out=water)
 
     def update(self, config: SimulationConfig) -> None:
         moisture = self.layers[FieldLayer.MOISTURE]
         moisture += 0.02 * (self.moisture_target - moisture)
         np.clip(moisture, 0.0, 1.0, out=moisture)
+        self._update_water()
         food = self.layers[FieldLayer.FOOD]
         moisture = self.layers[FieldLayer.MOISTURE]
         free = self.layers[FieldLayer.OBSTACLES] == 0
