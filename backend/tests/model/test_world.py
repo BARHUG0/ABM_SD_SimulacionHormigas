@@ -538,3 +538,16 @@ def test_food_cannot_be_added_on_blocked_cell():
     world.paint_obstacles([(35, 35)], 0, True)
     assert world.add_food(35, 35, 0, 10.0) == 0
     assert world.layers[FieldLayer.FOOD][35, 35] == 0
+
+
+def test_pheromone_diffusion_reflects_at_outer_edges():
+    config = SimulationConfig()
+    config.pheromones.diffusion = 0.3
+    config.pheromones.food_evaporation = 0.0
+    world = World(config, np.random.default_rng(42))
+    field = world.layers[FieldLayer.PHEROMONE_FOOD]
+    field[0, 0] = 80.0
+    field[-1, -1] = 20.0
+    before = float(field.sum())
+    world.update_pheromones(config)
+    np.testing.assert_allclose(float(field.sum()), before, rtol=0.001)

@@ -49,8 +49,12 @@ class World:
         self.moisture_target = np.ones(self.shape, dtype=np.float32)
         self.water_target = np.zeros(self.shape, dtype=np.float32)
         self.food_sources: list[FoodSource] = []
+        self._food_masks: list[np.ndarray] = []
+        self._food_counts: list[int] = []
         self.food_capacity = np.zeros(self.shape, dtype=np.float32)
         self._place_initial_food(config)
+        self._refresh_pheromone_geometry()
+        self._initialize_water_buffers()
 
     def sample(
         self, layer: FieldLayer, x: np.ndarray, y: np.ndarray
@@ -138,42 +142,130 @@ class World:
         np.add.at(self.layers[layer], (yi[free], xi[free]), amount[valid][free])
         np.clip(self.layers[layer], 0, PHEROMONE_CAP, out=self.layers[layer])
 
+    def _refresh_pheromone_geometry(self) -> None:
+        obstacles = self.layers[FieldLayer.OBSTACLES] > 0
+        padded = np.pad(obstacles, 1, mode="edge")
+        self._pheromone_obstacles = obstacles
+        self._pheromone_open_neighbors = (
+            ~padded[:-2, 1:-1],
+            ~padded[2:, 1:-1],
+            ~padded[1:-1, 2:],
+            ~padded[1:-1, :-2],
+        )
+        open_count = np.zeros(self.shape, dtype=np.float32)
+        for mask in self._pheromone_open_neighbors:
+            np.add(open_count, mask, out=open_count, casting="unsafe")
+        self._pheromone_blocked_count = 4.0 - open_count
+        self._pheromone_neighbor_sum = np.empty(self.shape, dtype=np.float32)
+        self._pheromone_scratch = np.empty(self.shape, dtype=np.float32)
+        self._pheromone_dry_factor = np.empty(self.shape, dtype=np.float32)
+        self._pheromone_wash_factor = np.empty(self.shape, dtype=np.float32)
+        self._pheromone_center_factor = np.empty(self.shape, dtype=np.float32)
+
+    def _initialize_water_buffers(self) -> None:
+        self._water_obstacles = self.layers[FieldLayer.OBSTACLES] > 0
+        self._water_free = ~self._water_obstacles
+        self._water_active = np.empty(self.shape, dtype=bool)
+        self._water_scratch = np.empty(self.shape, dtype=np.float32)
+        self._water_neighbors = np.empty(self.shape, dtype=np.float32)
+        self._water_padded = np.empty(
+            (self.shape[0] + 2, self.shape[1] + 2), dtype=np.float32
+        )
+        self._water_open_n = np.empty(self.shape, dtype=bool)
+        self._water_open_s = np.empty(self.shape, dtype=bool)
+        self._water_open_e = np.empty(self.shape, dtype=bool)
+        self._water_open_w = np.empty(self.shape, dtype=bool)
+        self._water_blocked_count = np.empty(self.shape, dtype=np.float32)
+        self._refresh_water_geometry()
+
+    def _refresh_water_geometry(self) -> None:
+        np.equal(self.layers[FieldLayer.OBSTACLES], 0, out=self._water_free)
+        np.logical_not(self._water_free, out=self._water_obstacles)
+        free = self._water_free
+        self._water_open_n[:] = free
+        self._water_open_s[:] = free
+        self._water_open_e[:] = free
+        self._water_open_w[:] = free
+        self._water_open_n[1:, :] &= free[:-1, :]
+        self._water_open_s[:-1, :] &= free[1:, :]
+        self._water_open_e[:, :-1] &= free[:, 1:]
+        self._water_open_w[:, 1:] &= free[:, :-1]
+        self._water_open_n[0, :] = free[0, :]
+        self._water_open_s[-1, :] = free[-1, :]
+        self._water_open_e[:, -1] = free[:, -1]
+        self._water_open_w[:, 0] = free[:, 0]
+        blocked_count = self._water_blocked_count
+        blocked_count.fill(4.0)
+        for mask in (
+            self._water_open_n,
+            self._water_open_s,
+            self._water_open_e,
+            self._water_open_w,
+        ):
+            np.subtract(blocked_count, mask, out=blocked_count)
+
     def update_pheromones(self, config: SimulationConfig) -> None:
         settings = config.pheromones
-        diffusion = settings.diffusion
-        obstacles = self.layers[FieldLayer.OBSTACLES] > 0
+        diffusion = float(settings.diffusion)
+        obstacles = self._pheromone_obstacles
         moisture = self.layers[FieldLayer.MOISTURE]
         water = self.layers[FieldLayer.WATER]
-        evaporation_rates = (
+        scratch = self._pheromone_scratch
+        neighbors = self._pheromone_neighbor_sum
+
+        np.subtract(1.0, moisture, out=self._pheromone_dry_factor)
+        np.multiply(self._pheromone_dry_factor, 2.0, out=self._pheromone_dry_factor)
+        np.add(self._pheromone_dry_factor, 1.0, out=self._pheromone_dry_factor)
+        np.multiply(water, -0.5, out=self._pheromone_wash_factor)
+        np.add(self._pheromone_wash_factor, 1.0, out=self._pheromone_wash_factor)
+
+        if diffusion > 0:
+            np.multiply(
+                self._pheromone_blocked_count,
+                diffusion * 0.25,
+                out=self._pheromone_center_factor,
+            )
+            np.add(self._pheromone_center_factor, 1.0 - diffusion,
+                   out=self._pheromone_center_factor)
+
+        for layer, evaporation in (
             (FieldLayer.PHEROMONE_FOOD, settings.food_evaporation),
             (FieldLayer.PHEROMONE_HOME, settings.home_evaporation),
             (FieldLayer.PHEROMONE_ALARM, settings.alarm_evaporation),
-        )
-        for layer, evaporation in evaporation_rates:
+        ):
             field = self.layers[layer]
-            field[obstacles] = 0
+            field[obstacles] = 0.0
             if diffusion > 0:
-                padded = np.pad(field, 1, mode="edge")
-                north = padded[:-2, 1:-1]
-                south = padded[2:, 1:-1]
-                east = padded[1:-1, 2:]
-                west = padded[1:-1, :-2]
-                blocked = np.pad(obstacles, 1, mode="edge")
-                neighbors = (
-                    np.where(blocked[:-2, 1:-1], field, north)
-                    + np.where(blocked[2:, 1:-1], field, south)
-                    + np.where(blocked[1:-1, 2:], field, east)
-                    + np.where(blocked[1:-1, :-2], field, west)
-                ) * 0.25
-                field[:] = (1.0 - diffusion) * field + diffusion * neighbors
-            effective_evaporation = np.minimum(
-                1.0, evaporation * (1.0 + 2.0 * (1.0 - moisture))
-            )
-            field *= 1.0 - effective_evaporation
-            field *= 1.0 - 0.5 * water
-            field[obstacles] = 0
-            field[field < 1e-4] = 0
-            np.clip(field, 0, PHEROMONE_CAP, out=field)
+                neighbors.fill(0.0)
+                open_n, open_s, open_e, open_w = self._pheromone_open_neighbors
+                np.add(neighbors[1:, :], field[:-1, :],
+                       out=neighbors[1:, :], where=open_n[1:, :])
+                np.add(neighbors[:-1, :], field[1:, :],
+                       out=neighbors[:-1, :], where=open_s[:-1, :])
+                np.add(neighbors[:, :-1], field[:, 1:],
+                       out=neighbors[:, :-1], where=open_e[:, :-1])
+                np.add(neighbors[:, 1:], field[:, :-1],
+                       out=neighbors[:, 1:], where=open_w[:, 1:])
+                np.add(neighbors[0, :], field[0, :],
+                       out=neighbors[0, :], where=open_n[0, :])
+                np.add(neighbors[-1, :], field[-1, :],
+                       out=neighbors[-1, :], where=open_s[-1, :])
+                np.add(neighbors[:, 0], field[:, 0],
+                       out=neighbors[:, 0], where=open_w[:, 0])
+                np.add(neighbors[:, -1], field[:, -1],
+                       out=neighbors[:, -1], where=open_e[:, -1])
+                np.multiply(field, self._pheromone_center_factor, out=field)
+                np.multiply(neighbors, diffusion * 0.25, out=neighbors)
+                np.add(field, neighbors, out=field)
+
+            np.multiply(self._pheromone_dry_factor, evaporation, out=scratch)
+            np.minimum(scratch, 1.0, out=scratch)
+            np.subtract(1.0, scratch, out=scratch)
+            np.multiply(field, scratch, out=field)
+            np.multiply(field, self._pheromone_wash_factor, out=field)
+            field[obstacles] = 0.0
+            field[field < 1e-4] = 0.0
+            np.clip(field, 0.0, PHEROMONE_CAP, out=field)
 
     def _place_initial_food(self, config: SimulationConfig) -> None:
         settings = config.world
@@ -206,6 +298,8 @@ class World:
         self.food_sources.append(
             FoodSource(int(x), int(y), int(radius), capacity_per_cell)
         )
+        self._food_masks.append(mask)
+        self._food_counts.append(count)
         return count
 
     def paint_obstacles(
@@ -224,6 +318,8 @@ class World:
         if changed == 0:
             return 0
         obstacles[changed_mask] = target
+        self._refresh_pheromone_geometry()
+        self._refresh_water_geometry()
         if add:
             for layer in (
                 FieldLayer.FOOD,
@@ -266,11 +362,17 @@ class World:
     def _rebuild_food_capacity(self) -> None:
         self.food_capacity.fill(0.0)
         free = self.layers[FieldLayer.OBSTACLES] == 0
+        masks = []
+        counts = []
         for source in self.food_sources:
             mask = disk_mask(
                 self.shape, source.x, source.y, source.radius
             ) & free
+            masks.append(mask)
+            counts.append(int(np.count_nonzero(mask)))
             self.food_capacity[mask] += source.capacity_per_cell
+        self._food_masks = masks
+        self._food_counts = counts
         np.minimum(
             self.layers[FieldLayer.FOOD],
             self.food_capacity,
@@ -394,22 +496,46 @@ class World:
 
     def _update_water(self) -> None:
         water = self.layers[FieldLayer.WATER]
-        obstacles = self.layers[FieldLayer.OBSTACLES] > 0
-        active = (self.water_target > 0) & ~obstacles
-        water[active] += 0.05 * (self.water_target[active] - water[active])
-        water[obstacles] = 0.0
+        if not np.any(self.water_target) and not np.any(water):
+            return
 
-        padded = np.pad(water, 1, mode="edge")
-        blocked = np.pad(obstacles, 1, mode="edge")
-        neighbors = (
-            np.where(blocked[:-2, 1:-1], water, padded[:-2, 1:-1])
-            + np.where(blocked[2:, 1:-1], water, padded[2:, 1:-1])
-            + np.where(blocked[1:-1, :-2], water, padded[1:-1, :-2])
-            + np.where(blocked[1:-1, 2:], water, padded[1:-1, 2:])
-        ) * 0.25
-        water[:] = 0.75 * water + 0.25 * neighbors
-        water[~active] = np.maximum(0.0, water[~active] - 0.01)
-        water[obstacles] = 0.0
+        active = self._water_active
+        np.greater(self.water_target, 0.0, out=active)
+        np.logical_and(active, self._water_free, out=active)
+        scratch = self._water_scratch
+        neighbors = self._water_neighbors
+
+        np.subtract(self.water_target, water, out=scratch)
+        np.multiply(scratch, 0.05, out=scratch)
+        np.add(water, scratch, out=water, where=active)
+        water[self._water_obstacles] = 0.0
+
+        padded = self._water_padded
+        padded[1:-1, 1:-1] = water
+        padded[0, 1:-1] = water[0, :]
+        padded[-1, 1:-1] = water[-1, :]
+        padded[1:-1, 0] = water[:, 0]
+        padded[1:-1, -1] = water[:, -1]
+
+        neighbors.fill(0.0)
+        np.add(neighbors, padded[:-2, 1:-1], out=neighbors,
+               where=self._water_open_n)
+        np.add(neighbors, padded[2:, 1:-1], out=neighbors,
+               where=self._water_open_s)
+        np.add(neighbors, padded[1:-1, 2:], out=neighbors,
+               where=self._water_open_e)
+        np.add(neighbors, padded[1:-1, :-2], out=neighbors,
+               where=self._water_open_w)
+        np.multiply(water, self._water_blocked_count, out=scratch)
+        np.add(neighbors, scratch, out=neighbors)
+        np.multiply(water, 4.0, out=scratch)
+        np.subtract(scratch, neighbors, out=scratch)
+        np.multiply(scratch, 0.0625, out=scratch)
+        np.subtract(water, scratch, out=water)
+
+        np.logical_not(active, out=active)
+        np.subtract(water, 0.01, out=water, where=active)
+        water[self._water_obstacles] = 0.0
         np.clip(water, 0.0, 1.0, out=water)
 
     def update(self, config: SimulationConfig) -> None:
@@ -421,10 +547,7 @@ class World:
         moisture = self.layers[FieldLayer.MOISTURE]
         free = self.layers[FieldLayer.OBSTACLES] == 0
         rate = config.world.food_regen_rate * config.run.dt
-        for source in self.food_sources:
-            mask = disk_mask(self.shape, source.x, source.y, source.radius)
-            mask &= free
-            count = int(np.count_nonzero(mask))
+        for mask, count in zip(self._food_masks, self._food_counts):
             if count == 0:
                 continue
             regeneration = rate * float(moisture[mask].mean()) / count
