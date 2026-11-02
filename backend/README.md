@@ -1,6 +1,6 @@
 # Backend de Hormiguero Vivo
 
-API en FastAPI que expone la simulación híbrida ABM + SD. En la fase 1 el motor es un modelo simulado que respeta el contrato completo, de modo que el frontend puede trabajar contra datos plausibles mientras se implementa el modelo real.
+API en FastAPI que expone la simulación híbrida ABM + SD. El motor es un modelo híbrido: el mundo y las hormigas son agentes (ABM) y el nido es un sistema de stocks y flujos (SD) acoplado a ellos.
 
 ## Ejecución
 
@@ -13,6 +13,29 @@ cd src; ..\..\..\.venv\Scripts\python.exe -m hormiguero.export_openapi
 ```
 
 La documentación interactiva queda en `http://localhost:8000/docs`. El último comando regenera `contract/openapi.json`, que el frontend usa para generar sus tipos con `openapi-typescript`. Los orígenes permitidos por CORS se configuran con la variable `HORMIGUERO_CORS_ORIGINS`, separados por comas; por defecto se permite `http://localhost:5173`.
+
+## Modelo
+
+El paquete `hormiguero.engine.model` agrupa los componentes del motor y `HybridModel` los une:
+
+| Módulo | Contenido |
+|---|---|
+| `world.py` | `World`: capas, feromonas, comida, agua, humedad y perturbaciones |
+| `colony.py` | `Colony`: obreras, exploradoras y soldados con su máquina de estados |
+| `predators.py` | `Predators`: caza, combate con soldados y muerte de depredadores |
+| `nest.py` | `Nest`: stocks y flujos de comida, huevos, larvas y obreras, y fracción de forrajeo |
+| `resilience.py` | `ResilienceTracker`: acumuladores exactos para `GET /metrics/summary` |
+| `hybrid.py` | `HybridModel`: fachada que ordena el tick y expone lo que usa `Simulation` |
+
+Un tick ejecuta, en este orden: `world.update`, `colony.step`, `predators.step`, `world.update_pheromones`, `nest.step` y, con su reporte, `colony.starve` y `colony.spawn`. Hay un único `numpy.random.Generator` creado desde la semilla, así que la misma semilla y los mismos comandos reproducen la corrida.
+
+El nido integra con Euler y paso `run.dt`. Las obreras no son un stock integrado: `stocks.workers` es siempre el número de agentes vivos. Cada larva que madura se convierte en una hormiga real mediante un acumulador fraccional (`maturation_carry`), y la mortalidad por hambre se convierte en muertes enteras con otro (`starvation_carry`). Si la colonia alcanza `ants.max_ants`, las larvas esperan.
+
+`scripts/calibrate.py` corre los escenarios sin servidor y muestra los criterios de calibración por semilla:
+
+```powershell
+python scripts/calibrate.py baseline drought
+```
 
 ## Contrato
 
