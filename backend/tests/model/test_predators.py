@@ -58,3 +58,15 @@ def test_predator_ids_are_monotonic():
     second = predators.spawn(20, 20, PredatorSource.USER)
 
     assert second > first
+
+
+def test_predator_catches_prey_within_one_step_of_its_speed():
+    config, world, colony, predators = setup_agents()
+    config.predators.speed = 2.5
+    colony.x[0], colony.y[0] = 50, 50
+    colony.state[0] = list(AntState).index(AntState.SEARCHING)
+    predators.spawn(52, 50, PredatorSource.USER)
+
+    report = predators.step(config, world, colony)
+
+    assert report.kills == 1

@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
 SOLDIER_DAMAGE = 5.0
 EAT_DURATION = 20
+CATCH_RADIUS = 1.0
 
 
 @dataclass
@@ -114,7 +115,7 @@ class Predators:
                 else:
                     predator.heading = math.atan2(ant_y[target_index] - predator.y, ant_x[target_index] - predator.x)
                     distance = math.hypot(ant_x[target_index] - predator.x, ant_y[target_index] - predator.y)
-                    if distance <= 1.0 and predator.target_id not in victims and self.rng.random() < config.predators.attack_probability:
+                    if distance <= max(CATCH_RADIUS, config.predators.speed) and predator.target_id not in victims and self.rng.random() < config.predators.attack_probability:
                         victims.append(predator.target_id)
                         report.kills += 1
                         predator.energy = min(200.0, predator.energy + config.predators.energy_gain_per_kill)
