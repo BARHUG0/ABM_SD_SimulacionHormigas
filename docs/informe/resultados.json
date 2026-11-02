@@ -1,0 +1,535 @@
+{
+  "baseline": [
+    {
+      "scenario": "baseline",
+      "seed": 1,
+      "alive": true,
+      "final": 245,
+      "peak": 306,
+      "min": 100,
+      "mean_efficiency": 0.027367259045107457,
+      "delivered": 64520.627253741026,
+      "deaths": {
+        "predator": 0,
+        "flood": 0,
+        "starvation": 18,
+        "old_age": 836
+      },
+      "windows": [],
+      "recoveries": []
+    },
+    {
+      "scenario": "baseline",
+      "seed": 2,
+      "alive": true,
+      "final": 246,
+      "peak": 304,
+      "min": 100,
+      "mean_efficiency": 0.016211383800288935,
+      "delivered": 38006.61436796188,
+      "deaths": {
+        "predator": 0,
+        "flood": 0,
+        "starvation": 20,
+        "old_age": 821
+      },
+      "windows": [],
+      "recoveries": []
+    },
+    {
+      "scenario": "baseline",
+      "seed": 3,
+      "alive": true,
+      "final": 248,
+      "peak": 306,
+      "min": 100,
+      "mean_efficiency": 0.013877682050364697,
+      "delivered": 32918.791610479355,
+      "deaths": {
+        "predator": 1,
+        "flood": 0,
+        "starvation": 19,
+        "old_age": 807
+      },
+      "windows": [],
+      "recoveries": []
+    },
+    {
+      "scenario": "baseline",
+      "seed": 4,
+      "alive": true,
+      "final": 238,
+      "peak": 310,
+      "min": 100,
+      "mean_efficiency": 0.01733673642392069,
+      "delivered": 40536.39548018575,
+      "deaths": {
+        "predator": 0,
+        "flood": 0,
+        "starvation": 28,
+        "old_age": 824
+      },
+      "windows": [],
+      "recoveries": []
+    },
+    {
+      "scenario": "baseline",
+      "seed": 5,
+      "alive": true,
+      "final": 245,
+      "peak": 303,
+      "min": 100,
+      "mean_efficiency": 0.021650851850536508,
+      "delivered": 51379.01495760679,
+      "deaths": {
+        "predator": 0,
+        "flood": 0,
+        "starvation": 22,
+        "old_age": 828
+      },
+      "windows": [],
+      "recoveries": []
+    }
+  ],
+  "drought": [
+    {
+      "scenario": "drought",
+      "seed": 1,
+      "alive": true,
+      "final": 244,
+      "peak": 306,
+      "min": 100,
+      "mean_efficiency": 0.022053310345133758,
+      "delivered": 46757.07225039601,
+      "deaths": {
+        "predator": 0,
+        "flood": 0,
+        "starvation": 174,
+        "old_age": 679
+      },
+      "windows": [
+        [
+          6000,
+          9000
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 243.0,
+          "minimum": 134.0,
+          "ticks": 3985
+        }
+      ]
+    },
+    {
+      "scenario": "drought",
+      "seed": 2,
+      "alive": true,
+      "final": 241,
+      "peak": 304,
+      "min": 100,
+      "mean_efficiency": 0.016069876801874352,
+      "delivered": 35568.72887468338,
+      "deaths": {
+        "predator": 0,
+        "flood": 0,
+        "starvation": 97,
+        "old_age": 746
+      },
+      "windows": [
+        [
+          6000,
+          9000
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 237.0,
+          "minimum": 177.0,
+          "ticks": 5058
+        }
+      ]
+    },
+    {
+      "scenario": "drought",
+      "seed": 3,
+      "alive": true,
+      "final": 234,
+      "peak": 306,
+      "min": 100,
+      "mean_efficiency": 0.013409772036297094,
+      "delivered": 28906.267398148775,
+      "deaths": {
+        "predator": 1,
+        "flood": 0,
+        "starvation": 150,
+        "old_age": 683
+      },
+      "windows": [
+        [
+          6000,
+          9000
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 230.0,
+          "minimum": 150.0,
+          "ticks": 3938
+        }
+      ]
+    },
+    {
+      "scenario": "drought",
+      "seed": 4,
+      "alive": true,
+      "final": 241,
+      "peak": 310,
+      "min": 100,
+      "mean_efficiency": 0.014434609616875154,
+      "delivered": 31689.37005111575,
+      "deaths": {
+        "predator": 0,
+        "flood": 0,
+        "starvation": 125,
+        "old_age": 719
+      },
+      "windows": [
+        [
+          6000,
+          9000
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 245.0,
+          "minimum": 162.0,
+          "ticks": 4166
+        }
+      ]
+    },
+    {
+      "scenario": "drought",
+      "seed": 5,
+      "alive": true,
+      "final": 249,
+      "peak": 303,
+      "min": 100,
+      "mean_efficiency": 0.0239348284166113,
+      "delivered": 52457.04957970977,
+      "deaths": {
+        "predator": 0,
+        "flood": 0,
+        "starvation": 111,
+        "old_age": 735
+      },
+      "windows": [
+        [
+          6000,
+          9000
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 244.0,
+          "minimum": 169.0,
+          "ticks": 5775
+        }
+      ]
+    }
+  ],
+  "flood": [
+    {
+      "scenario": "flood",
+      "seed": 1,
+      "alive": true,
+      "final": 246,
+      "peak": 306,
+      "min": 100,
+      "mean_efficiency": 0.02292742762309769,
+      "delivered": 53439.23750805855,
+      "deaths": {
+        "predator": 0,
+        "flood": 8,
+        "starvation": 19,
+        "old_age": 825
+      },
+      "windows": [
+        [
+          5000,
+          5150
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 291.0,
+          "minimum": 277.0,
+          "ticks": null
+        }
+      ]
+    },
+    {
+      "scenario": "flood",
+      "seed": 2,
+      "alive": true,
+      "final": 245,
+      "peak": 304,
+      "min": 100,
+      "mean_efficiency": 0.016804153232081162,
+      "delivered": 39415.56849163771,
+      "deaths": {
+        "predator": 0,
+        "flood": 7,
+        "starvation": 21,
+        "old_age": 815
+      },
+      "windows": [
+        [
+          5000,
+          5150
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 278.0,
+          "minimum": 261.0,
+          "ticks": null
+        }
+      ]
+    },
+    {
+      "scenario": "flood",
+      "seed": 3,
+      "alive": true,
+      "final": 248,
+      "peak": 306,
+      "min": 100,
+      "mean_efficiency": 0.014144764532117016,
+      "delivered": 33398.078733474016,
+      "deaths": {
+        "predator": 1,
+        "flood": 17,
+        "starvation": 16,
+        "old_age": 796
+      },
+      "windows": [
+        [
+          5000,
+          5150
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 287.0,
+          "minimum": 263.0,
+          "ticks": null
+        }
+      ]
+    },
+    {
+      "scenario": "flood",
+      "seed": 4,
+      "alive": true,
+      "final": 244,
+      "peak": 310,
+      "min": 100,
+      "mean_efficiency": 0.01683497554857436,
+      "delivered": 39607.78652149439,
+      "deaths": {
+        "predator": 0,
+        "flood": 6,
+        "starvation": 27,
+        "old_age": 813
+      },
+      "windows": [
+        [
+          5000,
+          5150
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 287.0,
+          "minimum": 276.0,
+          "ticks": null
+        }
+      ]
+    },
+    {
+      "scenario": "flood",
+      "seed": 5,
+      "alive": true,
+      "final": 248,
+      "peak": 303,
+      "min": 100,
+      "mean_efficiency": 0.022661792673218273,
+      "delivered": 53583.83201095462,
+      "deaths": {
+        "predator": 0,
+        "flood": 6,
+        "starvation": 21,
+        "old_age": 821
+      },
+      "windows": [
+        [
+          5000,
+          5150
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 285.0,
+          "minimum": 263.0,
+          "ticks": null
+        }
+      ]
+    }
+  ],
+  "predator_invasion": [
+    {
+      "scenario": "predator_invasion",
+      "seed": 1,
+      "alive": true,
+      "final": 248,
+      "peak": 251,
+      "min": 43,
+      "mean_efficiency": 0.028365562717393662,
+      "delivered": 38993.92901799083,
+      "deaths": {
+        "predator": 188,
+        "flood": 0,
+        "starvation": 181,
+        "old_age": 477
+      },
+      "windows": [
+        [
+          3000,
+          8000
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 232.0,
+          "minimum": 43.0,
+          "ticks": 2902
+        }
+      ]
+    },
+    {
+      "scenario": "predator_invasion",
+      "seed": 2,
+      "alive": true,
+      "final": 251,
+      "peak": 254,
+      "min": 33,
+      "mean_efficiency": 0.017855742096096642,
+      "delivered": 28681.63618567586,
+      "deaths": {
+        "predator": 215,
+        "flood": 0,
+        "starvation": 175,
+        "old_age": 428
+      },
+      "windows": [
+        [
+          3000,
+          8000
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 216.0,
+          "minimum": 33.0,
+          "ticks": 2927
+        }
+      ]
+    },
+    {
+      "scenario": "predator_invasion",
+      "seed": 3,
+      "alive": true,
+      "final": 233,
+      "peak": 246,
+      "min": 32,
+      "mean_efficiency": 0.014933809934375826,
+      "delivered": 22400.114633262157,
+      "deaths": {
+        "predator": 206,
+        "flood": 0,
+        "starvation": 180,
+        "old_age": 389
+      },
+      "windows": [
+        [
+          3000,
+          8000
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 226.0,
+          "minimum": 32.0,
+          "ticks": 6366
+        }
+      ]
+    },
+    {
+      "scenario": "predator_invasion",
+      "seed": 4,
+      "alive": true,
+      "final": 242,
+      "peak": 251,
+      "min": 29,
+      "mean_efficiency": 0.021637888233938137,
+      "delivered": 29574.326334565878,
+      "deaths": {
+        "predator": 222,
+        "flood": 0,
+        "starvation": 180,
+        "old_age": 415
+      },
+      "windows": [
+        [
+          3000,
+          8000
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 233.0,
+          "minimum": 29.0,
+          "ticks": 4489
+        }
+      ]
+    },
+    {
+      "scenario": "predator_invasion",
+      "seed": 5,
+      "alive": true,
+      "final": 244,
+      "peak": 258,
+      "min": 32,
+      "mean_efficiency": 0.02749920393157533,
+      "delivered": 35654.03556087613,
+      "deaths": {
+        "predator": 194,
+        "flood": 0,
+        "starvation": 194,
+        "old_age": 447
+      },
+      "windows": [
+        [
+          3000,
+          8000
+        ]
+      ],
+      "recoveries": [
+        {
+          "before": 240.0,
+          "minimum": 32.0,
+          "ticks": 5787
+        }
+      ]
+    }
+  ]
+}

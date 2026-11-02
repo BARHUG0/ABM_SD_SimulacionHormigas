@@ -1,0 +1,128 @@
+{
+  "codigo_anterior_config_calibrada": [
+    {
+      "seed": 1,
+      "alive": false,
+      "collapse_tick": 5655,
+      "final": 0,
+      "peak": 113,
+      "delivered": 778.4822067432106
+    },
+    {
+      "seed": 2,
+      "alive": false,
+      "collapse_tick": 11452,
+      "final": 0,
+      "peak": 138,
+      "delivered": 1826.182664025575
+    },
+    {
+      "seed": 3,
+      "alive": false,
+      "collapse_tick": 2877,
+      "final": 0,
+      "peak": 113,
+      "delivered": 15.0
+    },
+    {
+      "seed": 4,
+      "alive": false,
+      "collapse_tick": 8738,
+      "final": 0,
+      "peak": 146,
+      "delivered": 2021.9491760469973
+    },
+    {
+      "seed": 5,
+      "alive": false,
+      "collapse_tick": 4839,
+      "final": 0,
+      "peak": 141,
+      "delivered": 1012.5278757736087
+    }
+  ],
+  "codigo_final_config_por_defecto": [
+    {
+      "seed": 1,
+      "alive": false,
+      "collapse_tick": 789,
+      "final": 0,
+      "peak": 109,
+      "delivered": 71.39823150634766
+    },
+    {
+      "seed": 2,
+      "alive": false,
+      "collapse_tick": 773,
+      "final": 0,
+      "peak": 108,
+      "delivered": 2.0
+    },
+    {
+      "seed": 3,
+      "alive": false,
+      "collapse_tick": 753,
+      "final": 0,
+      "peak": 108,
+      "delivered": 10.424778938293457
+    },
+    {
+      "seed": 4,
+      "alive": false,
+      "collapse_tick": 784,
+      "final": 0,
+      "peak": 108,
+      "delivered": 7.0
+    },
+    {
+      "seed": 5,
+      "alive": false,
+      "collapse_tick": 840,
+      "final": 0,
+      "peak": 108,
+      "delivered": 21.424778938293457
+    }
+  ],
+  "codigo_final_config_calibrada": [
+    {
+      "seed": 1,
+      "alive": true,
+      "collapse_tick": null,
+      "final": 245,
+      "peak": 306,
+      "delivered": 64520.627253741026
+    },
+    {
+      "seed": 2,
+      "alive": true,
+      "collapse_tick": null,
+      "final": 246,
+      "peak": 304,
+      "delivered": 38006.61436796188
+    },
+    {
+      "seed": 3,
+      "alive": true,
+      "collapse_tick": null,
+      "final": 248,
+      "peak": 306,
+      "delivered": 32918.791610479355
+    },
+    {
+      "seed": 4,
+      "alive": true,
+      "collapse_tick": null,
+      "final": 238,
+      "peak": 310,
+      "delivered": 40536.39548018575
+    },
+    {
+      "seed": 5,
+      "alive": true,
+      "collapse_tick": null,
+      "final": 245,
+      "peak": 303,
+      "delivered": 51379.01495760679
+    }
+  ]
+}
