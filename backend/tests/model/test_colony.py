@@ -4,7 +4,7 @@ from hormiguero.engine.model.colony import Colony
 from hormiguero.engine.model.predators import Predators
 from hormiguero.engine.model.world import World
 from hormiguero.schemas.config import SimulationConfig
-from hormiguero.schemas.state import AntRole, AntState, FieldLayer
+from hormiguero.schemas.state import AntRole, AntState, FieldLayer, PredatorSource
 
 
 def setup_colony():
@@ -67,3 +67,84 @@ def test_colony_spawn_keeps_ids_monotonic_after_removal():
     colony.spawn(2, config, world)
 
     assert np.array_equal(colony.ids[-2:], old_ids[-2:] + 2)
+
+
+def test_returning_ants_head_toward_the_nest_without_pheromone():
+    config, world, colony, predators = setup_colony()
+    config.ants.speed = 1
+    config.ants.random_turn = 0
+    colony.role[:] = list(AntRole).index(AntRole.FORAGER)
+    colony.x[:] = 140
+    colony.y[:] = 100
+    colony.heading[:] = 0
+    colony.state[:] = list(AntState).index(AntState.RETURNING)
+    colony.load[:] = 1.0
+    colony.carrying[:] = True
+    start = np.hypot(colony.x - config.world.nest_x, colony.y - config.world.nest_y).mean()
+
+    for _ in range(30):
+        colony.step(config, world, predators, 1.0, 100)
+
+    end = np.hypot(colony.x - config.world.nest_x, colony.y - config.world.nest_y).mean()
+    assert end < start - 10
+
+
+def test_empty_returning_ants_rest_when_they_reach_the_nest():
+    config, world, colony, predators = setup_colony()
+    colony.x[:] = config.world.nest_x
+    colony.y[:] = config.world.nest_y
+    colony.state[:] = list(AntState).index(AntState.RETURNING)
+    colony.load[:] = 0.0
+
+    colony.step(config, world, predators, 0.0, 100)
+
+    assert np.all(colony.state == list(AntState).index(AntState.IDLE_IN_NEST))
+
+
+def test_ants_keep_heading_away_while_fleeing():
+    config, world, colony, predators = setup_colony()
+    config.ants.speed = 1
+    config.ants.random_turn = 0
+    colony.role[:] = list(AntRole).index(AntRole.FORAGER)
+    colony.x[:] = 50
+    colony.y[:] = 50
+    colony.state[:] = list(AntState).index(AntState.SEARCHING)
+    colony.heading[:] = 0
+    predators.spawn(52, 50, PredatorSource.USER)
+
+    colony.step(config, world, predators, 1.0, 100)
+    first = colony.x.mean()
+    predators.items.clear()
+    colony.step(config, world, predators, 1.0, 100)
+
+    assert colony.x.mean() < first
+
+
+def test_fleeing_ants_resume_returning_when_they_carry_food():
+    config, world, colony, predators = setup_colony()
+    colony.x[:] = 50
+    colony.y[:] = 50
+    colony.state[:] = list(AntState).index(AntState.FLEEING)
+    colony.flee_timer[:] = 1
+    colony.load[:] = 1.0
+    colony.carrying[:] = True
+
+    colony.step(config, world, predators, 1.0, 100)
+
+    assert np.all(colony.state == list(AntState).index(AntState.RETURNING))
+
+
+def test_ants_ignore_food_crumbs_below_the_minimum_pickup():
+    config, world, colony, predators = setup_colony()
+    config.ants.random_turn = 0
+    config.ants.speed = 0.1
+    world.add_food(130, 100, 0, 0.01)
+    colony.x[:] = 130
+    colony.y[:] = 100
+    colony.state[:] = list(AntState).index(AntState.SEARCHING)
+    colony.role[:] = list(AntRole).index(AntRole.FORAGER)
+
+    colony.step(config, world, predators, 1.0, 100)
+
+    assert np.all(colony.state == list(AntState).index(AntState.SEARCHING))
+    assert np.all(colony.load == 0)

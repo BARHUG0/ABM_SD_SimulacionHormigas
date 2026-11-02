@@ -20,6 +20,10 @@ if TYPE_CHECKING:
 
 SCOUT_FRACTION = 0.1
 FLEE_DURATION = 30
+HOMING_GAIN = 0.5
+MIN_PICKUP_FRACTION = 0.3
+FORAGING_RANGE_FRACTION = 0.35
+SCOUT_RANGE_FACTOR = 1.6
 
 
 @dataclass
@@ -136,6 +140,9 @@ class Colony:
         searching = self.state == self._state(AntState.SEARCHING)
         pickup = searching & ~world.in_nest(self.x, self.y)
         if np.any(pickup):
+            worthwhile = world.sample(FieldLayer.FOOD, self.x[pickup], self.y[pickup]) >= MIN_PICKUP_FRACTION * config.ants.carry_capacity
+            pickup[pickup] = worthwhile
+        if np.any(pickup):
             picked = world.take_food(self.x[pickup], self.y[pickup], config.ants.carry_capacity)
             self.load[pickup] = picked
             got = pickup.copy()
@@ -154,6 +161,8 @@ class Colony:
             idle_after = active >= active_target
             self.state[deliver] = np.where(idle_after, self._state(AntState.IDLE_IN_NEST), self._state(AntState.SEARCHING))
             self.heading[deliver] = (self.heading[deliver] + math.pi) % (2 * math.pi)
+        arrived = (self.state == self._state(AntState.RETURNING)) & world.in_nest(self.x, self.y) & (self.load <= 0)
+        self.state[arrived] = self._state(AntState.IDLE_IN_NEST)
         self._deposit(config, world)
         self._remove_deaths(config, world)
         for cause in ("predator", "flood", "starvation", "old_age"):
@@ -187,9 +196,16 @@ class Colony:
             self.heading[chosen] = self.rng.uniform(0, 2 * math.pi, chosen.size)
 
     def _flee(self, config: SimulationConfig, world: World, predators: "Predators") -> None:
-        if not predators.items:
-            self.flee_timer = np.maximum(self.flee_timer - 1, 0)
-            return
+        if predators.items:
+            self._detect_predators(config, world, predators)
+        fleeing = self.state == self._state(AntState.FLEEING)
+        self.flee_timer[fleeing] -= 1
+        done = fleeing & (self.flee_timer <= 0)
+        self.state[done] = np.where(
+            self.load[done] > 0, self._state(AntState.RETURNING), self._state(AntState.SEARCHING)
+        )
+
+    def _detect_predators(self, config: SimulationConfig, world: World, predators: "Predators") -> None:
         predator_positions = np.array([(p.x, p.y) for p in predators.items.values()])
         distances = ((self.x[:, None] - predator_positions[:, 0]) ** 2 + (self.y[:, None] - predator_positions[:, 1]) ** 2)
         nearest = np.argmin(distances, axis=1)
@@ -201,10 +217,6 @@ class Colony:
             target = predator_positions[nearest[eligible]]
             self.heading[eligible] = np.arctan2(self.y[eligible] - target[:, 1], self.x[eligible] - target[:, 0])
             world.deposit(FieldLayer.PHEROMONE_ALARM, self.x[eligible], self.y[eligible], config.pheromones.deposit_amount)
-        fleeing = self.state == self._state(AntState.FLEEING)
-        self.flee_timer[fleeing] -= 1
-        done = fleeing & (self.flee_timer <= 0)
-        self.state[done] = self._state(AntState.SEARCHING)
 
     def _sense_and_move(self, config: SimulationConfig, world: World, in_nest: np.ndarray) -> None:
         movable = self.state != self._state(AntState.IDLE_IN_NEST)
@@ -228,16 +240,22 @@ class Colony:
         best = np.argmax(scores, axis=0)
         use_sensor = scores[best, np.arange(best.size)] > 0.05
         turns = np.zeros(best.size)
+        scout = self.role[selected] == self._role(AntRole.SCOUT)
         turns[best == 0] = -angle
         turns[best == 2] = angle
         turns[~use_sensor] = 0
-        scout = self.role[selected] == self._role(AntRole.SCOUT)
         ignore = scout & (self.rng.random(best.size) < 0.8)
         turns[ignore] = 0
+        distance_to_nest = np.hypot(self.x[selected] - world.nest_x, self.y[selected] - world.nest_y)
+        range_limit = FORAGING_RANGE_FRACTION * min(world.shape) * np.where(scout, SCOUT_RANGE_FACTOR, 1.0)
+        straying = (self.state[selected] == self._state(AntState.SEARCHING)) & ~use_sensor & (distance_to_nest > range_limit)
+        homing = (self.state[selected] == self._state(AntState.RETURNING)) | straying
+        if np.any(homing):
+            toward = world.nest_direction(self.x[selected[homing]], self.y[selected[homing]])
+            offset = (toward - self.heading[selected[homing]] + math.pi) % (2 * math.pi) - math.pi
+            turns[homing] = HOMING_GAIN * offset
         turn_limit = math.radians(config.ants.random_turn) * np.where(scout, 2.0, 1.0)
         self.heading[selected] += turns + self.rng.uniform(-turn_limit, turn_limit)
-        fleeing = self.state[selected] == self._state(AntState.FLEEING)
-        self.heading[selected[fleeing]] += math.pi
         next_x = self.x[selected] + np.cos(self.heading[selected]) * config.ants.speed
         next_y = self.y[selected] + np.sin(self.heading[selected]) * config.ants.speed
         free = world.is_free(next_x, next_y)
