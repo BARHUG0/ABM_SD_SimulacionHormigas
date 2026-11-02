@@ -170,10 +170,10 @@ def test_history_includes_deaths(client, simulation_id):
 
 def test_history_compacts_instead_of_dropping_start():
     from hormiguero.engine.history import History
-    from hormiguero.engine.mock_model import MockModel
+    from hormiguero.engine.model.hybrid import HybridModel
     from hormiguero.schemas.config import SimulationConfig
 
-    frame = MockModel(SimulationConfig(), seed=1).frame([])
+    frame = HybridModel(SimulationConfig(), seed=1).frame([])
     history = History(capacity=10)
     for tick in range(40):
         history.append(tick, frame)

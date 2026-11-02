@@ -8,7 +8,7 @@ from pydantic import ValidationError
 
 from hormiguero.engine.fields import encode_field
 from hormiguero.engine.history import History
-from hormiguero.engine.mock_model import MockModel
+from hormiguero.engine.model.hybrid import HybridModel
 from hormiguero.engine.parameters import apply_parameter_update, requires_rebuild
 from hormiguero.engine.summary import survival_summary
 from hormiguero.errors import conflict, not_found, unprocessable
@@ -96,7 +96,7 @@ class Simulation:
         self._rebuild_model(obstacles)
 
     def _rebuild_model(self, obstacles=None) -> None:
-        self.model = MockModel(self.config, self.seed, obstacles)
+        self.model = HybridModel(self.config, self.seed, obstacles)
         self.layer_peaks: dict[FieldLayer, float] = {}
         self.history = History()
         self.history.append(0, self.frame())
@@ -375,7 +375,7 @@ class Simulation:
     def summary(self) -> SurvivalSummary:
         return survival_summary(
             self.tick,
-            self.history,
+            self.model.resilience,
             list(self.events.values()),
             self.collapse_tick,
             self.model.food_delivered_total,
